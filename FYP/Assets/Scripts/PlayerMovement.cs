@@ -1,8 +1,9 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using Unity.Netcode;
 
-public class PlayerMovement : MonoBehaviour
+public class PlayerMovement : NetworkBehaviour
 {
     private float moveSpeed;
     public Transform orientation;
@@ -16,6 +17,7 @@ public class PlayerMovement : MonoBehaviour
     public float jumpCooldown;
     public float airMultiplier;
     private bool canJump = true;
+    private KeyCode jumpKey;
 
     //check if player is on ground
     public float playerHeight;
@@ -29,11 +31,15 @@ public class PlayerMovement : MonoBehaviour
         moveSpeed = Globals.PlayerMoveSpeed;
         rb = GetComponent<Rigidbody>();
         rb.freezeRotation = true;
+        jumpKey = Globals.JumpKey;
     }
 
     // Update is called once per frame
     void Update()
     {
+        if(!IsOwner)
+            return;
+
         //raycast from center of player to check if we are on ground
         grounded = Physics.Raycast(transform.position, Vector3.down, playerHeight * 0.5f + 0.2f, groundMask);
 
@@ -47,6 +53,9 @@ public class PlayerMovement : MonoBehaviour
 
     private void FixedUpdate()
     {
+        if (!IsOwner)
+            return;
+
         MovePlayer();
     }
 
@@ -56,7 +65,7 @@ public class PlayerMovement : MonoBehaviour
         verticalInput = Input.GetAxisRaw("Vertical");
 
         //jump
-        if (Input.GetKey(KeyCode.Space) && canJump && grounded)
+        if (Input.GetKey(jumpKey) && canJump && grounded)
         {
             canJump = false;
             Jump();

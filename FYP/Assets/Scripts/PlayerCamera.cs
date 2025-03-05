@@ -1,8 +1,9 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using Unity.Netcode;
 
-public class PlayerCamera : MonoBehaviour
+public class PlayerCamera : NetworkBehaviour
 {
     float sensX;
     float sensY;
@@ -23,8 +24,11 @@ public class PlayerCamera : MonoBehaviour
 
     private void Update()
     {
+        if (!IsOwner)
+            return;
+
         float mouseX = Input.GetAxisRaw("Mouse X") * Time.deltaTime * sensX;
-        float mouseY = Input.GetAxisRaw("Mouse Y") * Time.deltaTime * sensY;
+        float mouseY = Input.GetAxisRaw("Mouse Y") * Time.deltaTime * -sensY;
 
         rotationY += mouseX;
         rotationX += mouseY;
