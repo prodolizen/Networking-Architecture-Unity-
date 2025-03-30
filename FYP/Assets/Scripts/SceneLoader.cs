@@ -1,18 +1,42 @@
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
+using Unity.Netcode;
+using UnityEngine.SceneManagement;
+using System.Collections;
+using System.Linq.Expressions;
 
-public class SceneLoader : MonoBehaviour
+public class SceneLoader : NetworkBehaviour
 {
-    // Start is called before the first frame update
-    void Start()
+    public static SceneLoader Instance;
+
+    private void Awake()
     {
-        
+        if (Instance == null)
+        {
+            Instance = this;
+            DontDestroyOnLoad(gameObject); 
+        }
+        else
+        {
+            Destroy(gameObject); // Prevent duplicates
+        }
     }
 
-    // Update is called once per frame
-    void Update()
+    public void LoadScene(string sceneName, LoadSceneMode sceneMode)
     {
-        
+        NetworkManager.SceneManager.LoadScene(sceneName, sceneMode);
     }
+
+    public bool SceneLoaded(string sceneName)
+    {
+        for (int i = 0; i < SceneManager.sceneCount; i++)
+        {
+            Scene scene = SceneManager.GetSceneAt(i);
+
+            if(scene.name == sceneName)
+                return true;
+        }
+
+        return false;
+    }
+
 }

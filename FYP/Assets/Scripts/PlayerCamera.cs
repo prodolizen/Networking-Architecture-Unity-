@@ -24,7 +24,7 @@ public class PlayerCamera : NetworkBehaviour
 
     private void Update()
     {
-        if (!IsOwner)
+        if (!IsOwner || !MatchManager.Instance.matchActive.Value)
             return;
 
         float mouseX = Input.GetAxisRaw("Mouse X") * Time.deltaTime * sensX;

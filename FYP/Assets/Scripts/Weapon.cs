@@ -5,25 +5,41 @@ using UnityEngine;
 
 public class Weapon : NetworkBehaviour
 {
-    public int playerPoints; //points earned on round win to purchase weapons
-    public Transform slot1;
-    public Transform slot2;
-    public Transform slot3;
+    public int playerPoints; // Points earned on round win to purchase weapons
+    private Transform slot1;
+    private Transform slot2;
+    private Transform slot3;
+
+    public Camera playerCamera;
+
+    public Player playerRef;
+
     public enum WeaponID
     {
-        Beamer = 0,
-        Glock = 1,
-        Knife = 2,
+        BEAMER = 0,
+        MINI = 1,
+        KNIFE = 2,
+        REBEL = 3,
+        RIOT = 4,
+        BLASTER = 5,
+        PEPPER = 6,
+        POKER = 7,
+        MAXI = 8,
     }
 
     public struct WeaponInfo
     {
         public WeaponID ID;
         public GameObject obj;
+        public Weapon script; // Store the actual script reference
+        public float damage;
     }
 
     [SerializeField]
     private List<GameObject> Weapons;
+
+    [SerializeField]
+    private List<WeaponInfo> weaponTests;
 
     private WeaponInfo weapon1;
     private WeaponInfo weapon2;
@@ -34,26 +50,44 @@ public class Weapon : NetworkBehaviour
     private int lastWeapon3 = 999;
 
     public int test;
-    // Start is called before the first frame update
+
+    public Weapon weaponsTest;
+
+    public PEPPER peppertest;
+
+    public RaycastHit target = default;
+
     void Start()
     {
-        //default weapons
-        weapon1.ID = WeaponID.Beamer;
-        weapon2.ID = WeaponID.Glock;
-        weapon3.ID = WeaponID.Knife;
+        // Default weapons
+        weapon1.ID = WeaponID.REBEL;
+        weapon2.ID = WeaponID.MINI;
+        weapon3.ID = WeaponID.PEPPER;
+
+        slot1 = gameObject.transform.Find("Slot 1");
+        slot2 = gameObject.transform.Find("Slot 2");
+        slot3 = gameObject.transform.Find("Slot 3");
+
+        playerRef = gameObject.transform.GetComponentInParent<Player>();
     }
 
-    // Update is called once per frame
     void Update()
     {
         if (!IsOwner)
             return;
-        weapon1.ID = (WeaponID)test;
+
         SpawnSelected();
         Equip();
+        target = crosshairDetection();
+        //weaponsTest = target.transform.Find("WeaponHolder").GetComponent<Weapon>();
+        
+        if (Input.GetMouseButtonDown(0)) // Left mouse button
+        {
+            ShootActiveWeapon();
+        }
     }
 
-    private void SpawnSelected() //spawn the correct weapons to corresponing slots
+    private void SpawnSelected()
     {
         if (Weapons[(int)weapon1.ID] != null)
         {
@@ -61,6 +95,7 @@ public class Weapon : NetworkBehaviour
             {
                 Destroy(weapon1.obj);
                 weapon1.obj = Instantiate(Weapons[(int)weapon1.ID], slot1);
+                weapon1.script = weapon1.obj.GetComponent<Weapon>(); // Get the weapon script
                 weapon1.obj.SetActive(false);
                 lastWeapon1 = (int)weapon1.ID;
             }
@@ -72,6 +107,7 @@ public class Weapon : NetworkBehaviour
             {
                 Destroy(weapon2.obj);
                 weapon2.obj = Instantiate(Weapons[(int)weapon2.ID], slot2);
+                weapon2.script = weapon2.obj.GetComponent<Weapon>();
                 weapon2.obj.SetActive(false);
                 lastWeapon2 = (int)weapon2.ID;
             }
@@ -83,13 +119,14 @@ public class Weapon : NetworkBehaviour
             {
                 Destroy(weapon3.obj);
                 weapon3.obj = Instantiate(Weapons[(int)weapon3.ID], slot3);
+                weapon3.script = weapon3.obj.GetComponent<Weapon>();
                 weapon3.obj.SetActive(false);
                 lastWeapon3 = (int)weapon3.ID;
             }
         }
     }
 
-    private void Equip() //equip the weapon to players hand
+    private void Equip()
     {
         if (Input.GetKey(Globals.Primary))
         {
@@ -109,5 +146,46 @@ public class Weapon : NetworkBehaviour
             weapon2.obj.SetActive(false);
             weapon3.obj.SetActive(true);
         }
+    }
+
+    private void ShootActiveWeapon()
+    {
+        if (weapon1.obj.activeSelf && weapon1.script != null)
+        {
+            weapon1.script.Shoot(target);
+        }
+        else if (weapon2.obj.activeSelf && weapon2.script != null)
+        {
+            weapon2.script.Shoot(target);
+        }
+        else if (weapon3.obj.activeSelf && weapon3.script != null)
+        {
+            weapon3.script.Shoot(target);
+        }
+
+        //weapon1.script.Shoot(target);
+    }
+
+    public virtual void Shoot(RaycastHit target)
+    {
+        Debug.Log("Base Weapon Shoot");
+    }
+
+    private RaycastHit crosshairDetection()
+    {
+        Vector3 screenCenter = new Vector3(Screen.width / 2, Screen.height / 2, 0);
+
+        Ray ray = playerCamera.ScreenPointToRay(screenCenter);
+        RaycastHit hit;
+
+        if (Physics.Raycast(ray, out hit))
+        {
+            Debug.Log(hit.collider.gameObject.tag);
+
+            return hit;
+        }
+
+        else
+            return hit;
     }
 }
