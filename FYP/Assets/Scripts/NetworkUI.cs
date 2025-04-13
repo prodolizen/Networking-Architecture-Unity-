@@ -1,13 +1,12 @@
 using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 using Unity.Netcode;
 using UnityEngine.UI;
-using System.Net;
 using Unity.Netcode.Transports.UTP;
-using Unity.VisualScripting;
 using UnityEngine.SceneManagement;
 using TMPro;
+using Unity.Collections;
+using System;
 
 public class NetworkUI : NetworkBehaviour
 {
@@ -22,44 +21,41 @@ public class NetworkUI : NetworkBehaviour
     public TMP_Text matchID;
     private bool isReady = false;
     public Button readyButton;
+    public Image background;
 
     void Awake()
     {
         if (FindObjectsOfType<NetworkManager>().Length > 1)
         {
-            Debug.LogError("Duplicate NetworkManager detected! Destroying extra instance.");
             Destroy(gameObject);
             return;
         }
         DontDestroyOnLoad(gameObject);
     }
 
-    // Start is called before the first frame update
     void Start()
     {
         crosshairImage = crosshair.GetComponent<Image>();
     }
 
-    // Update is called once per frame
     void Update()
     {
         crosshairImage.color = Globals.CrosshairColour;
 
-        if (Input.GetKey(KeyCode.Alpha7))
-        {
-            StartHost();
-        }
+        //if (Input.GetKey(KeyCode.Alpha7))
+        //{
+        //    StartHost();
+        //}
 
         if (MatchManager.Instance != null)
         {
             clientCount.text = "Connected Clients: " + MatchManager.Instance.connectedClients;
+            background.gameObject.SetActive(!MatchManager.Instance.matchActive.Value);
         }
     }
 
     public void StartHost()
     {
-        Debug.Log("START HOST");
-
         if (NetworkManager.Singleton.IsServer || NetworkManager.Singleton.IsHost)
         {
             Debug.LogError("A host is already running!");
@@ -74,15 +70,22 @@ public class NetworkUI : NetworkBehaviour
             SceneLoader.Instance.LoadScene("Arena", LoadSceneMode.Additive);
         }
 
+        if (MatchManager.Instance != null)
+        {
+            int roomCode = UnityEngine.Random.Range(1000, 9999);
+            string ip = MatchManager.Instance.serverAdress.Value.ToString();
+
+            matchID.text = roomCode.ToString();
+            MatchManager.Instance.CreateRoomOnServer(roomCode, ip);
+        }
+
         SwapLayers(layerOne, layerThree);
     }
 
     private void OnClientConnected(ulong clientId)
     {
-        Debug.Log($"Client {clientId} connected but not spawning player yet.");
+        Debug.Log($"Client {clientId} connected.");
     }
-
-
 
     private void SwapLayers(GameObject layer1, GameObject layer2)
     {
@@ -93,7 +96,6 @@ public class NetworkUI : NetworkBehaviour
     public void JoinGame()
     {
         SwapLayers(layerOne, layerTwo);
-       
     }
 
     public void TakeIP(string s)
@@ -105,29 +107,44 @@ public class NetworkUI : NetworkBehaviour
     {
         if (string.IsNullOrEmpty(gameIP))
         {
-            Debug.LogError("No IP address entered!");
+            Debug.LogError("No room code entered!");
             return;
         }
 
-        Debug.Log("Attempting to connect to " + gameIP);
+        if (MatchManager.Instance != null)
+        {
+            int code;
+            if (!int.TryParse(gameIP, out code))
+            {
+                Debug.LogError("Invalid room code.");
+                return;
+            }
 
-        NetworkManager.Singleton.GetComponent<UnityTransport>().ConnectionData.Address = gameIP;
-        NetworkManager.Singleton.StartClient();
-
-        // Wait for client to connect before hiding UI
-        StartCoroutine(HideUIAfterConnection());
+            MatchManager.Instance.GetServerIpFromRoomCode(code, (serverIp) =>
+            {
+                if (!string.IsNullOrEmpty(serverIp))
+                {
+                    Debug.Log("Connecting to IP: " + serverIp);
+                    UnityTransport transport = NetworkManager.Singleton.GetComponent<UnityTransport>();
+                    transport.ConnectionData.Address = serverIp;
+                    NetworkManager.Singleton.StartClient();
+                    StartCoroutine(HideUIAfterConnection());
+                }
+                else
+                {
+                    Debug.LogError("Room not found!");
+                }
+            });
+        }
     }
 
     private IEnumerator HideUIAfterConnection()
     {
         while (!NetworkManager.Singleton.IsClient)
         {
-            yield return null; // Wait until client starts
+            yield return null;
         }
 
-        Debug.Log("Client successfully started, hiding UI.");
-        //uiComps.SetActive(false);
-        //crosshair.SetActive(true);
         SwapLayers(layerTwo, layerThree);
     }
 

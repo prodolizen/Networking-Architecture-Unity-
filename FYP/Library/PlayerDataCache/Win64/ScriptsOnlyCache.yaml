@@ -56,12 +56,17 @@ ScriptsOnlyBuild:
     - UnityEngine.UI.LayoutElement
     - UnityEngine.UI.RectMask2D
   serializedClasses:
+    Unity.Collections:
+    - Unity.Collections.FixedBytes16
+    - Unity.Collections.FixedBytes62
+    - Unity.Collections.FixedString64Bytes
     Unity.Netcode.Runtime:
     - Unity.Netcode.NetworkConfig
     - Unity.Netcode.NetworkPrefab
     - Unity.Netcode.NetworkPrefabs
     - Unity.Netcode.NetworkVariable`1[System.Boolean]
     - Unity.Netcode.NetworkVariable`1[System.Int32]
+    - Unity.Netcode.NetworkVariable`1[Unity.Collections.FixedString64Bytes]
     - Unity.Netcode.Transports.UTP.UnityTransport/ConnectionAddressData
     - Unity.Netcode.Transports.UTP.UnityTransport/SimulatorParameters
     Unity.TextMeshPro:
@@ -185,37 +190,37 @@ ScriptsOnlyBuild:
     - Class: 104
       Script: {instanceID: 0}
     - Class: 114
-      Script: {instanceID: 16696}
+      Script: {instanceID: 16650}
     - Class: 114
-      Script: {instanceID: 16746}
+      Script: {instanceID: 16698}
     - Class: 114
-      Script: {instanceID: 16896}
+      Script: {instanceID: 16748}
     - Class: 114
-      Script: {instanceID: 17160}
+      Script: {instanceID: 16898}
     - Class: 114
-      Script: {instanceID: 17464}
+      Script: {instanceID: 17162}
     - Class: 114
-      Script: {instanceID: 17536}
+      Script: {instanceID: 17466}
     - Class: 114
-      Script: {instanceID: 17818}
+      Script: {instanceID: 17538}
     - Class: 114
-      Script: {instanceID: 18000}
+      Script: {instanceID: 17820}
     - Class: 114
-      Script: {instanceID: 18044}
+      Script: {instanceID: 18002}
     - Class: 114
-      Script: {instanceID: 18056}
+      Script: {instanceID: 18046}
     - Class: 114
-      Script: {instanceID: 18268}
+      Script: {instanceID: 18058}
     - Class: 114
-      Script: {instanceID: 18520}
+      Script: {instanceID: 18270}
     - Class: 114
-      Script: {instanceID: 18648}
+      Script: {instanceID: 18522}
     - Class: 114
-      Script: {instanceID: 18854}
+      Script: {instanceID: 18650}
     - Class: 114
-      Script: {instanceID: 18986}
+      Script: {instanceID: 18856}
     - Class: 114
-      Script: {instanceID: 19074}
+      Script: {instanceID: 18988}
     - Class: 114
       Script: {instanceID: 19208}
     - Class: 114
@@ -253,11 +258,11 @@ ScriptsOnlyBuild:
     - Class: 114
       Script: {instanceID: 22378}
     - Class: 114
-      Script: {instanceID: 23192}
+      Script: {instanceID: 22542}
     - Class: 114
-      Script: {instanceID: 24462}
+      Script: {instanceID: 23194}
     - Class: 114
-      Script: {instanceID: 42468}
+      Script: {instanceID: 24464}
     - Class: 115
       Script: {instanceID: 0}
     - Class: 128
@@ -279,6 +284,12 @@ ScriptsOnlyBuild:
     - Class: 224
       Script: {instanceID: 0}
   scriptHashData:
+  - hash:
+      serializedVersion: 2
+      Hash: ac5c9676a62ca8b220cda11b1609045a
+    assemblyName: Assembly-CSharp
+    namespaceName: 
+    className: NetworkUI
   - hash:
       serializedVersion: 2
       Hash: d41ab9b5ea92474f9c0a6937a0607ce1
@@ -675,12 +686,6 @@ ScriptsOnlyBuild:
     assemblyName: UnityEngine.UI
     namespaceName: UnityEngine.EventSystems
     className: BaseInput
-  - hash:
-      serializedVersion: 2
-      Hash: 3d341d38cdf8b322e66e559250b8c979
-    assemblyName: Assembly-CSharp
-    namespaceName: 
-    className: NetworkUI
   - hash:
       serializedVersion: 2
       Hash: 418b67019f13f9684552f2693bae3971
@@ -1193,6 +1198,12 @@ ScriptsOnlyBuild:
     className: BeforeAfterTestCommandState
   - hash:
       serializedVersion: 2
+      Hash: 8a1380353463f42398009be1d23354d2
+    assemblyName: Assembly-CSharp
+    namespaceName: 
+    className: MatchManager
+  - hash:
+      serializedVersion: 2
       Hash: 8bbce9932f67ad8e7f4eefec87800f94
     assemblyName: Unity.TextMeshPro
     namespaceName: TMPro
@@ -1473,12 +1484,6 @@ ScriptsOnlyBuild:
     assemblyName: Unity.VisualScripting.Core
     namespaceName: Unity.VisualScripting
     className: UnityOnSliderValueChangedMessageListener
-  - hash:
-      serializedVersion: 2
-      Hash: 7f36701baeee46fe76964de722b13d4b
-    assemblyName: Assembly-CSharp
-    namespaceName: 
-    className: MatchManager
   platform: 19
   scenePathNames:
   - Assets/Scenes/Main.unity

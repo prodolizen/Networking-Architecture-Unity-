@@ -1,21 +1,46 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using Unity.Netcode;
+using Unity.Netcode.Transports.UTP;
 using UnityEngine;
 using UnityEngine.SceneManagement;
+using Unity.Collections;
+using UnityEngine.Networking;
+using System.Text;
 
 public class MatchManager : NetworkBehaviour
 {
     public static MatchManager Instance;
 
-    // Default overrides allow all clients to read, but only the server can write
     public NetworkVariable<int> score = new NetworkVariable<int>(0);
     public NetworkVariable<bool> matchActive = new NetworkVariable<bool>(false);
-
     public NetworkVariable<bool> hostReady = new NetworkVariable<bool>(false);
     public NetworkVariable<bool> clientReady = new NetworkVariable<bool>(false);
+    public NetworkVariable<FixedString64Bytes> serverAdress = new NetworkVariable<FixedString64Bytes>();
+
+    public struct Link : INetworkSerializable, IEquatable<Link>
+    {
+        public int roomCode;
+        public FixedString64Bytes serverIp;
+
+        public bool Equals(Link other)
+        {
+            return roomCode == other.roomCode && serverIp.Equals(other.serverIp);
+        }
+
+        public void NetworkSerialize<T>(BufferSerializer<T> serializer) where T : IReaderWriter
+        {
+            serializer.SerializeValue(ref roomCode);
+            serializer.SerializeValue(ref serverIp);
+        }
+    }
+
+    [SerializeField]
+    public NetworkList<Link> roomCodes;
 
     public int connectedClients;
+   // public NetworkVariable<Link> roomLink = new NetworkVariable<Link>();
 
     void Awake()
     {
@@ -28,6 +53,8 @@ public class MatchManager : NetworkBehaviour
         {
             Destroy(gameObject);
         }
+
+        roomCodes = new NetworkList<Link>();
     }
 
     void Update()
@@ -36,7 +63,6 @@ public class MatchManager : NetworkBehaviour
         {
             connectedClients = NetworkManager.Singleton.ConnectedClients.Count;
 
-            // Only start the match when both players are connected AND ready
             if (connectedClients == 2 && hostReady.Value && clientReady.Value)
             {
                 matchActive.Value = true;
@@ -45,6 +71,17 @@ public class MatchManager : NetworkBehaviour
             else
             {
                 matchActive.Value = false;
+            }
+
+            var transport = NetworkManager.Singleton.GetComponent<UnityTransport>();
+            if (transport != null)
+            {
+                serverAdress.Value = transport.ConnectionData.Address;
+            }
+
+            foreach (var link in roomCodes)
+            {
+                Debug.Log($"Room Code: {link.roomCode}, IP: {link.serverIp}");
             }
         }
     }
@@ -68,25 +105,67 @@ public class MatchManager : NetworkBehaviour
     {
         if (IsServer)
         {
-            Debug.Log("Both players are ready. Starting match...");
             SceneLoader.Instance.LoadScene("Arena", LoadSceneMode.Additive);
         }
     }
 
-    //manual player spawning, removed as I was able to get stuff working even with the server automatically spawning players
-    //private void SpawnPlayer(ulong clientId)
-    //{
-    //    NetworkObject playerPrefab = NetworkManager.Singleton.NetworkConfig.PlayerPrefab.GetComponent<NetworkObject>();
+    private const string baseUrl = "http://localhost:3000"; // local only atm hardcoded adress
 
-    //    if (playerPrefab == null)
-    //    {
-    //        Debug.LogError("Player Prefab is missing a NetworkObject component!");
-    //        return;
-    //    }
+    public void CreateRoomOnServer(int roomCode, string serverIp)
+    {
+        RoomData data = new RoomData { roomCode = roomCode, serverIp = serverIp };
+        string json = JsonUtility.ToJson(data);
+        StartCoroutine(PostRequest($"{baseUrl}/create-room", json));
+    }
 
-    //    // Instantiate and Spawn the player for the given client
-    //    NetworkObject playerInstance = Instantiate(playerPrefab);
-    //    playerInstance.SpawnAsPlayerObject(clientId);
-    //}
+    public void GetServerIpFromRoomCode(int roomCode, Action<string> callback)
+    {
+        StartCoroutine(GetRequest($"{baseUrl}/get-ip/{roomCode}", callback));
+    }
+
+    private IEnumerator PostRequest(string url, string json)
+    {
+        var request = new UnityWebRequest(url, "POST");
+        byte[] bodyRaw = Encoding.UTF8.GetBytes(json);
+        request.uploadHandler = new UploadHandlerRaw(bodyRaw);
+        request.downloadHandler = new DownloadHandlerBuffer();
+        request.SetRequestHeader("Content-Type", "application/json");
+
+        yield return request.SendWebRequest();
+
+        if (request.result != UnityWebRequest.Result.Success)
+        {
+            Debug.LogError("Post Error: " + request.error);
+        }
+        else
+        {
+            Debug.Log("Room created: " + request.downloadHandler.text);
+        }
+    }
+
+    private IEnumerator GetRequest(string url, Action<string> callback)
+    {
+        UnityWebRequest request = UnityWebRequest.Get(url);
+        yield return request.SendWebRequest();
+
+        if (request.result != UnityWebRequest.Result.Success)
+        {
+            Debug.LogError("Get Error: " + request.error);
+            callback(null);
+        }
+        else
+        {
+            RoomData response = JsonUtility.FromJson<RoomData>(request.downloadHandler.text);
+            callback(response.serverIp);
+        }
+    }
+
+
+    [Serializable]
+    public class RoomData
+    {
+        public int roomCode;
+        public string serverIp;
+    }
 
 }

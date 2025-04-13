@@ -15,8 +15,8 @@ public class PlayerCamera : NetworkBehaviour
 
     private void Start()
     {
-        Cursor.lockState = CursorLockMode.Locked;
-        Cursor.visible = false;
+        //Cursor.lockState = CursorLockMode.Locked;
+        //Cursor.visible = false;
 
         sensX = Globals.PlayerCamSensX;
         sensY = Globals.PlayerCamSensY;
@@ -26,6 +26,12 @@ public class PlayerCamera : NetworkBehaviour
     {
         if (!IsOwner || !MatchManager.Instance.matchActive.Value)
             return;
+
+        if (Cursor.lockState != CursorLockMode.Locked)
+            Cursor.lockState = CursorLockMode.Locked;
+
+        if(Cursor.visible == true)
+            Cursor.visible = false;
 
         float mouseX = Input.GetAxisRaw("Mouse X") * Time.deltaTime * sensX;
         float mouseY = Input.GetAxisRaw("Mouse Y") * Time.deltaTime * -sensY;
