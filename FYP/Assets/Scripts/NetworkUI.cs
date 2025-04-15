@@ -14,6 +14,7 @@ public class NetworkUI : NetworkBehaviour
     public GameObject layerOne;
     public GameObject layerTwo;
     public GameObject layerThree;
+    public GameObject layerFour;    
     private string gameIP;
     public GameObject crosshair;
     private Image crosshairImage;
@@ -22,6 +23,9 @@ public class NetworkUI : NetworkBehaviour
     private bool isReady = false;
     public Button readyButton;
     public Image background;
+    private GameObject activeLayer;
+    private string username;
+    private string password;
 
     void Awake()
     {
@@ -36,6 +40,7 @@ public class NetworkUI : NetworkBehaviour
     void Start()
     {
         crosshairImage = crosshair.GetComponent<Image>();
+        activeLayer = layerOne;
     }
 
     void Update()
@@ -73,7 +78,12 @@ public class NetworkUI : NetworkBehaviour
         if (MatchManager.Instance != null)
         {
             int roomCode = UnityEngine.Random.Range(1000, 9999);
-            string ip = MatchManager.Instance.serverAdress.Value.ToString();
+            // string ip = MatchManager.Instance.serverAdress.Value.ToString();
+
+            string ip = NetworkManager.Singleton.GetComponent<UnityTransport>().ConnectionData.Address;
+            MatchManager.Instance.serverAdress.Value = ip;
+
+            Debug.Log("Setting server IP: " + ip);
 
             matchID.text = roomCode.ToString();
             MatchManager.Instance.CreateRoomOnServer(roomCode, ip);
@@ -91,6 +101,7 @@ public class NetworkUI : NetworkBehaviour
     {
         layer1.SetActive(false);
         layer2.SetActive(true);
+        activeLayer = layer2;
     }
 
     public void JoinGame()
@@ -101,6 +112,16 @@ public class NetworkUI : NetworkBehaviour
     public void TakeIP(string s)
     {
         gameIP = s;
+    }
+
+    public void TakeUsername(string s)
+    {
+        username = s;
+    }
+
+    public void TakePassword(string s)
+    {
+        password = s;
     }
 
     public void EnterIP()
@@ -158,5 +179,21 @@ public class NetworkUI : NetworkBehaviour
         }
 
         readyButton.GetComponentInChildren<Text>().text = isReady ? "Unready" : "Ready";
+    }
+    void OnApplicationQuit() //delete current room code and ip from SQL DB
+    {
+        if (IsServer) // only host should delete
+        {
+            int roomCode = int.Parse(matchID.text);
+            MatchManager.Instance.DeleteRoomFromServer(roomCode);
+        }
+    }
+
+    public void AccountButton()
+    {
+        if(activeLayer != layerFour)
+            SwapLayers(activeLayer, layerFour);
+        else
+            SwapLayers(activeLayer, layerOne);
     }
 }

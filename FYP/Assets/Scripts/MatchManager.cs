@@ -113,6 +113,7 @@ public class MatchManager : NetworkBehaviour
 
     public void CreateRoomOnServer(int roomCode, string serverIp)
     {
+        Debug.Log("SERVER IP: " + serverIp);
         RoomData data = new RoomData { roomCode = roomCode, serverIp = serverIp };
         string json = JsonUtility.ToJson(data);
         StartCoroutine(PostRequest($"{baseUrl}/create-room", json));
@@ -168,4 +169,23 @@ public class MatchManager : NetworkBehaviour
         public string serverIp;
     }
 
+    public void DeleteRoomFromServer(int roomCode)
+    {
+        StartCoroutine(DeleteRequest($"{baseUrl}/delete-room/{roomCode}"));
+    }
+
+    private IEnumerator DeleteRequest(string url)
+    {
+        UnityWebRequest request = UnityWebRequest.Delete(url);
+        yield return request.SendWebRequest();
+
+        if (request.result != UnityWebRequest.Result.Success)
+        {
+            Debug.LogError("Delete Error: " + request.error);
+        }
+        else
+        {
+            Debug.Log("Room deleted: " + request.downloadHandler.text);
+        }
+    }
 }
