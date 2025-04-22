@@ -15,6 +15,7 @@ public class NetworkUI : NetworkBehaviour
     public GameObject layerTwo;
     public GameObject layerThree;
     public GameObject layerFour;    
+    public GameObject layerFive;
     private string gameIP;
     public GameObject crosshair;
     private Image crosshairImage;
@@ -26,6 +27,8 @@ public class NetworkUI : NetworkBehaviour
     private GameObject activeLayer;
     private string username;
     private string password;
+    public TMP_Text loggedName;
+    private bool loggedIn = false;
 
     void Awake()
     {
@@ -124,6 +127,32 @@ public class NetworkUI : NetworkBehaviour
         password = s;
     }
 
+    public void Register()
+    {
+        if (MatchManager.Instance != null)
+        {
+            MatchManager.Instance.RegisterAccount(username, password, OnAccountAuthenticated);
+        }
+    }
+
+    public void Login()
+    {
+        if (MatchManager.Instance != null)
+        {
+            MatchManager.Instance.LoginAccount(username, password, OnAccountAuthenticated);
+        }
+    }
+
+    //check for successful login
+    private void OnAccountAuthenticated()
+    {
+        Debug.Log("User is now authenticated!");
+        // Swap to game layer, enable features, etc.
+        loggedName.text = username;
+        SwapLayers(activeLayer, layerFive); // Or wherever you want to go after auth
+        loggedIn = true;
+    }
+
     public void EnterIP()
     {
         if (string.IsNullOrEmpty(gameIP))
@@ -191,9 +220,19 @@ public class NetworkUI : NetworkBehaviour
 
     public void AccountButton()
     {
-        if(activeLayer != layerFour)
-            SwapLayers(activeLayer, layerFour);
+        if (!loggedIn)
+        {
+            if (activeLayer != layerFour)
+                SwapLayers(activeLayer, layerFour);
+            else
+                SwapLayers(activeLayer, layerOne);
+        }
         else
-            SwapLayers(activeLayer, layerOne);
+        {
+            if (activeLayer != layerFive)
+                SwapLayers(activeLayer, layerFive);
+            else
+                SwapLayers(activeLayer, layerOne);
+        }
     }
 }

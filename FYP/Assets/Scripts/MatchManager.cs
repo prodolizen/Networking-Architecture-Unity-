@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections;
 using System.Collections.Generic;
 using Unity.Netcode;
@@ -8,6 +8,20 @@ using UnityEngine.SceneManagement;
 using Unity.Collections;
 using UnityEngine.Networking;
 using System.Text;
+using Newtonsoft.Json; // ← Added
+
+[Serializable]
+public class AccountData
+{
+    public string username;
+    public string password;
+
+    public AccountData(string user, string pass)
+    {
+        username = user;
+        password = pass;
+    }
+}
 
 public class MatchManager : NetworkBehaviour
 {
@@ -40,7 +54,6 @@ public class MatchManager : NetworkBehaviour
     public NetworkList<Link> roomCodes;
 
     public int connectedClients;
-   // public NetworkVariable<Link> roomLink = new NetworkVariable<Link>();
 
     void Awake()
     {
@@ -109,13 +122,13 @@ public class MatchManager : NetworkBehaviour
         }
     }
 
-    private const string baseUrl = "http://localhost:3000"; // local only atm hardcoded adress
+    private const string baseUrl = "http://localhost:3000";
 
     public void CreateRoomOnServer(int roomCode, string serverIp)
     {
         Debug.Log("SERVER IP: " + serverIp);
         RoomData data = new RoomData { roomCode = roomCode, serverIp = serverIp };
-        string json = JsonUtility.ToJson(data);
+        string json = JsonConvert.SerializeObject(data); // ← Replaced JsonUtility
         StartCoroutine(PostRequest($"{baseUrl}/create-room", json));
     }
 
@@ -156,11 +169,10 @@ public class MatchManager : NetworkBehaviour
         }
         else
         {
-            RoomData response = JsonUtility.FromJson<RoomData>(request.downloadHandler.text);
+            RoomData response = JsonConvert.DeserializeObject<RoomData>(request.downloadHandler.text); // ← Updated
             callback(response.serverIp);
         }
     }
-
 
     [Serializable]
     public class RoomData
@@ -188,4 +200,41 @@ public class MatchManager : NetworkBehaviour
             Debug.Log("Room deleted: " + request.downloadHandler.text);
         }
     }
+
+    public void LoginAccount(string username, string password, Action onSuccess = null)
+    {
+        AccountData data = new AccountData(username, password);
+        string json = JsonUtility.ToJson(data);
+        StartCoroutine(PostAuthRequest($"{baseUrl}/login", json, "Logged In", onSuccess));
+    }
+
+    public void RegisterAccount(string username, string password, Action onSuccess = null)
+    {
+        AccountData data = new AccountData(username, password);
+        string json = JsonUtility.ToJson(data);
+        StartCoroutine(PostAuthRequest($"{baseUrl}/register", json, "Registered", onSuccess));
+    }
+
+    // Overload PostAuthRequest
+    private IEnumerator PostAuthRequest(string url, string json, string successMsg, Action onSuccess = null)
+    {
+        UnityWebRequest request = new UnityWebRequest(url, "POST");
+        byte[] bodyRaw = Encoding.UTF8.GetBytes(json);
+        request.uploadHandler = new UploadHandlerRaw(bodyRaw);
+        request.downloadHandler = new DownloadHandlerBuffer();
+        request.SetRequestHeader("Content-Type", "application/json");
+
+        yield return request.SendWebRequest();
+
+        if (request.result != UnityWebRequest.Result.Success)
+        {
+            Debug.LogError($"Auth Error: {request.responseCode} - {request.downloadHandler.text}");
+        }
+        else
+        {
+            Debug.Log(successMsg + ": " + request.downloadHandler.text);
+            onSuccess?.Invoke(); // ✅ Call success callback
+        }
+    }
+
 }
