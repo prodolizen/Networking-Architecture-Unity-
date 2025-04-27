@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
+using TMPro.Examples;
 using Unity.Netcode;
 using UnityEngine;
 
@@ -57,18 +58,25 @@ public class Weapon : NetworkBehaviour
 
     public RaycastHit target = default;
 
+    private Quaternion initialRotation3;
+    private bool firstRun;
+
     void Start()
     {
         // Default weapons
         weapon1.ID = WeaponID.REBEL;
         weapon2.ID = WeaponID.MINI;
-        weapon3.ID = WeaponID.PEPPER;
+        weapon3.ID = WeaponID.KNIFE;
 
         slot1 = gameObject.transform.Find("Slot 1");
         slot2 = gameObject.transform.Find("Slot 2");
         slot3 = gameObject.transform.Find("Slot 3");
 
         playerRef = gameObject.transform.GetComponentInParent<Player>();
+        initialRotation3 = slot3.transform.localRotation;
+
+       // SpawnSelected();
+        firstRun = true;
     }
 
     void Update()
@@ -77,6 +85,12 @@ public class Weapon : NetworkBehaviour
             return;
 
         SpawnSelected();
+
+        if (firstRun && MatchManager.Instance.matchActive.Value)
+        {
+            weapon1.obj.SetActive(true);
+            firstRun = false;
+        }
         Equip();
         target = crosshairDetection();
         //weaponsTest = target.transform.Find("WeaponHolder").GetComponent<Weapon>();

@@ -9,6 +9,7 @@ public class PlayerCamera : NetworkBehaviour
     float sensY;
 
     public Transform orientation;
+    public Transform weaponHolder;
 
     float rotationX;
     float rotationY;
@@ -30,7 +31,7 @@ public class PlayerCamera : NetworkBehaviour
         if (Cursor.lockState != CursorLockMode.Locked)
             Cursor.lockState = CursorLockMode.Locked;
 
-        if(Cursor.visible == true)
+        if (Cursor.visible == true)
             Cursor.visible = false;
 
         float mouseX = Input.GetAxisRaw("Mouse X") * Time.deltaTime * sensX;
@@ -41,8 +42,15 @@ public class PlayerCamera : NetworkBehaviour
 
         rotationX = Mathf.Clamp(rotationX, -90f, 90f);
 
-        //set rotation of camera and player orientation
+        // rotate the camera up/down and left/right
         transform.rotation = Quaternion.Euler(rotationX, rotationY, 0);
+
+        // rotate player orientation only left/right
         orientation.rotation = Quaternion.Euler(0, rotationY, 0);
+
+        // no more setting weaponHolder.rotation here!!
+        // Weapon stays child of camera and just tilts locally if you want
     }
+
+
 }

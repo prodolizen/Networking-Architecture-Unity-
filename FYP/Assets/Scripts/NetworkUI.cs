@@ -29,6 +29,7 @@ public class NetworkUI : NetworkBehaviour
     private string password;
     public TMP_Text loggedName;
     private bool loggedIn = false;
+    public HostManager hostManager;
 
     void Awake()
     {
@@ -44,11 +45,18 @@ public class NetworkUI : NetworkBehaviour
     {
         crosshairImage = crosshair.GetComponent<Image>();
         activeLayer = layerOne;
+
+        if (hostManager == null)
+        {
+            hostManager = FindObjectOfType<HostManager>();
+        }
     }
 
     void Update()
     {
         crosshairImage.color = Globals.CrosshairColour;
+
+        //crosshair.SetActive(MatchManager.Instance.matchActive.Value);
 
         //if (Input.GetKey(KeyCode.Alpha7))
         //{
@@ -57,8 +65,14 @@ public class NetworkUI : NetworkBehaviour
 
         if (MatchManager.Instance != null)
         {
-            clientCount.text = "Connected Clients: " + MatchManager.Instance.connectedClients;
+            clientCount.text = "Connected Clients: " + MatchManager.Instance.connectedClients.Value;
             background.gameObject.SetActive(!MatchManager.Instance.matchActive.Value);
+
+            //hide ui on match start
+            if (MatchManager.Instance.matchActive.Value)
+            {
+                uiComps.SetActive(false);
+            }
         }
     }
 
@@ -94,6 +108,34 @@ public class NetworkUI : NetworkBehaviour
 
         SwapLayers(layerOne, layerThree);
     }
+
+    // Button click for hosting gam
+
+    //public void StartHost()
+    //{
+    //     Disable host creation on local machine, instead start EC2 instance
+    //    if (NetworkManager.Singleton.IsServer || NetworkManager.Singleton.IsHost)
+    //    {
+    //        Debug.LogError("A host is already running!");
+    //        return;
+    //    }
+
+    //     First, we trigger the EC2 server startup
+    //    if (hostManager != null)
+    //    {
+    //        int roomCode = UnityEngine.Random.Range(1000, 9999);
+
+    //         Call HostManager to start the EC2 server and pass the room code
+    //        hostManager.StartHostingGame(roomCode);
+
+    //         Save the room code locally to be shared with others
+    //        matchID.text = roomCode.ToString();
+    //    }
+
+    //     Once EC2 instance is running, allow the user to join the server
+    //    SwapLayers(layerOne, layerThree);
+    //}
+
 
     private void OnClientConnected(ulong clientId)
     {
@@ -153,6 +195,42 @@ public class NetworkUI : NetworkBehaviour
         loggedIn = true;
     }
 
+    //public void EnterIP()
+    //{
+    //    if (string.IsNullOrEmpty(gameIP))
+    //    {
+    //        Debug.LogError("No room code entered!");
+    //        return;
+    //    }
+
+    //    if (MatchManager.Instance != null)
+    //    {
+    //        int code;
+    //        if (!int.TryParse(gameIP, out code))
+    //        {
+    //            Debug.LogError("Invalid room code.");
+    //            return;
+    //        }
+
+    //        MatchManager.Instance.GetServerIpFromRoomCode(code, (serverIp) =>
+    //        {
+    //            if (!string.IsNullOrEmpty(serverIp))
+    //            {
+    //                Debug.Log("Connecting to IP: " + serverIp);
+    //                UnityTransport transport = NetworkManager.Singleton.GetComponent<UnityTransport>();
+    //                transport.ConnectionData.Address = serverIp;
+    //                matchID.text = code.ToString();
+    //                NetworkManager.Singleton.StartClient();
+    //                StartCoroutine(HideUIAfterConnection());
+    //            }
+    //            else
+    //            {
+    //                Debug.LogError("Room not found!");
+    //            }
+    //        });
+    //    }
+    //}
+
     public void EnterIP()
     {
         if (string.IsNullOrEmpty(gameIP))
@@ -170,6 +248,7 @@ public class NetworkUI : NetworkBehaviour
                 return;
             }
 
+            // Get the server IP using the room code
             MatchManager.Instance.GetServerIpFromRoomCode(code, (serverIp) =>
             {
                 if (!string.IsNullOrEmpty(serverIp))
@@ -177,6 +256,7 @@ public class NetworkUI : NetworkBehaviour
                     Debug.Log("Connecting to IP: " + serverIp);
                     UnityTransport transport = NetworkManager.Singleton.GetComponent<UnityTransport>();
                     transport.ConnectionData.Address = serverIp;
+                    matchID.text = code.ToString();
                     NetworkManager.Singleton.StartClient();
                     StartCoroutine(HideUIAfterConnection());
                 }
@@ -201,13 +281,12 @@ public class NetworkUI : NetworkBehaviour
     public void Ready()
     {
         isReady = !isReady;
+        readyButton.GetComponentInChildren<Image>().color = isReady ? Color.green : Color.red;
 
         if (MatchManager.Instance != null)
         {
             MatchManager.Instance.SetReadyStateServerRpc(isReady, NetworkManager.Singleton.LocalClientId);
         }
-
-        readyButton.GetComponentInChildren<Text>().text = isReady ? "Unready" : "Ready";
     }
     void OnApplicationQuit() //delete current room code and ip from SQL DB
     {

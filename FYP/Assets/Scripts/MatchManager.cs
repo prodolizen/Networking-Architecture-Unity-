@@ -32,6 +32,10 @@ public class MatchManager : NetworkBehaviour
     public NetworkVariable<bool> hostReady = new NetworkVariable<bool>(false);
     public NetworkVariable<bool> clientReady = new NetworkVariable<bool>(false);
     public NetworkVariable<FixedString64Bytes> serverAdress = new NetworkVariable<FixedString64Bytes>();
+    public NetworkVariable<bool> begunMatch = new NetworkVariable<bool>(false);
+    public NetworkVariable<int> connectedClients = new NetworkVariable<int>(0); 
+
+    public bool devOverride = false;
 
     public struct Link : INetworkSerializable, IEquatable<Link>
     {
@@ -53,7 +57,23 @@ public class MatchManager : NetworkBehaviour
     [SerializeField]
     public NetworkList<Link> roomCodes;
 
-    public int connectedClients;
+    // public int connectedClients;
+
+    //quick test to see if we are actually connecting to the server
+    //IEnumerator TestConnection()
+    //{
+    //    UnityWebRequest request = UnityWebRequest.Get("https://zendevfyp.click");
+    //    yield return request.SendWebRequest();
+
+    //    if (request.result != UnityWebRequest.Result.Success)
+    //    {
+    //        Debug.LogError("Connection error: " + request.error);
+    //    }
+    //    else
+    //    {
+    //        Debug.Log("Successfully connected to the server");
+    //    }
+    //}
 
     void Awake()
     {
@@ -74,9 +94,9 @@ public class MatchManager : NetworkBehaviour
     {
         if (IsServer)
         {
-            connectedClients = NetworkManager.Singleton.ConnectedClients.Count;
+            connectedClients.Value = NetworkManager.Singleton.ConnectedClients.Count;
 
-            if (connectedClients == 2 && hostReady.Value && clientReady.Value)
+            if (connectedClients.Value == 2 && hostReady.Value && clientReady.Value || devOverride == true)
             {
                 matchActive.Value = true;
                 StartMatch();
@@ -116,26 +136,31 @@ public class MatchManager : NetworkBehaviour
 
     private void StartMatch()
     {
-        if (IsServer)
+        if (IsServer && !begunMatch.Value)
         {
-            SceneLoader.Instance.LoadScene("Arena", LoadSceneMode.Additive);
+            //SceneLoader.Instance.LoadScene("Arena", LoadSceneMode.Additive);
+            begunMatch.Value = true;
         }
     }
 
-    private const string baseUrl = "http://localhost:3000";
+    // private const string baseUrl = "http://localhost:3000"; // local 
+    // private const string baseUrl = "https://13.51.167.138:3000";  // ubuntu linux ec2 address
+    private const string baseUrl = "https://zendevfyp.click:3000";
+
 
     public void CreateRoomOnServer(int roomCode, string serverIp)
     {
-        Debug.Log("SERVER IP: " + serverIp);
+        Debug.Log($"Creating room with Room Code: {roomCode} and Server IP: {serverIp}");
         RoomData data = new RoomData { roomCode = roomCode, serverIp = serverIp };
-        string json = JsonConvert.SerializeObject(data); // ← Replaced JsonUtility
+        string json = JsonConvert.SerializeObject(data); // Replaced JsonUtility
         StartCoroutine(PostRequest($"{baseUrl}/create-room", json));
     }
 
-    public void GetServerIpFromRoomCode(int roomCode, Action<string> callback)
-    {
-        StartCoroutine(GetRequest($"{baseUrl}/get-ip/{roomCode}", callback));
-    }
+
+    //public void GetServerIpFromRoomCode(int roomCode, Action<string> callback)
+    //{
+    //    StartCoroutine(GetRequest($"{baseUrl}/get-ip/{roomCode}", callback));
+    //}
 
     private IEnumerator PostRequest(string url, string json)
     {
@@ -157,6 +182,29 @@ public class MatchManager : NetworkBehaviour
         }
     }
 
+    //private IEnumerator GetRequest(string url, Action<string> callback)
+    //{
+    //    UnityWebRequest request = UnityWebRequest.Get(url);
+    //    yield return request.SendWebRequest();
+
+    //    if (request.result != UnityWebRequest.Result.Success)
+    //    {
+    //        Debug.LogError("Get Error: " + request.error);
+    //        callback(null);
+    //    }
+    //    else
+    //    {
+    //        RoomData response = JsonConvert.DeserializeObject<RoomData>(request.downloadHandler.text); // ← Updated
+    //        callback(response.serverIp);
+    //    }
+    //}
+
+    public void GetServerIpFromRoomCode(int roomCode, Action<string> callback)
+    {
+        Debug.Log($"{baseUrl}/get-ip/{roomCode}");
+        StartCoroutine(GetRequest($"{baseUrl}/get-ip/{roomCode}", callback));
+    }
+
     private IEnumerator GetRequest(string url, Action<string> callback)
     {
         UnityWebRequest request = UnityWebRequest.Get(url);
@@ -169,7 +217,8 @@ public class MatchManager : NetworkBehaviour
         }
         else
         {
-            RoomData response = JsonConvert.DeserializeObject<RoomData>(request.downloadHandler.text); // ← Updated
+            Debug.Log("success request");
+            RoomData response = JsonConvert.DeserializeObject<RoomData>(request.downloadHandler.text);
             callback(response.serverIp);
         }
     }
@@ -233,8 +282,10 @@ public class MatchManager : NetworkBehaviour
         else
         {
             Debug.Log(successMsg + ": " + request.downloadHandler.text);
-            onSuccess?.Invoke(); // ✅ Call success callback
+            onSuccess?.Invoke();
         }
     }
 
+
+   
 }

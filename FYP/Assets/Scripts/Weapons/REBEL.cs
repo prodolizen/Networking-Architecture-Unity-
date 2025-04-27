@@ -20,7 +20,7 @@ public class REBEL : Weapon
     }
 
     public override void Shoot(RaycastHit t)
-    {       
+    {
         if (t.collider != null)
         {
             if (t.transform.CompareTag("Head"))

@@ -36,28 +36,49 @@ public class PlayerMovement : NetworkBehaviour
         rb.freezeRotation = true;
         jumpKey = Globals.JumpKey;
 
-        if (IsOwner) //set player self to not be seen by player camera
-        {
-            playerCharacter.layer = 7;
+        //if (IsOwner) //set player self to not be seen by player camera
+        //{
+        //    playerCharacter.layer = 7;
 
-            foreach (Transform child in playerCharacter.transform)
-            {
-                child.gameObject.layer = 7;
-            }
+        //    foreach (Transform child in playerCharacter.transform)
+        //    {
+        //        child.gameObject.layer = 7;
+        //    }
+        //}
+
+        if (IsOwner)
+        {
+            SetLayerRecursively(playerCharacter, 7); // Hide local player
+        }
+        else
+        {
+            SetLayerRecursively(playerCharacter, 0); // Show other players on Default layer (0)
         }
 
-        if (SceneLoader.Instance.SceneLoaded("Arena"))
-        {
-            spawnPoint = GameObject.Find("spawnPoint").transform;
-            gameObject.transform.position = spawnPoint.position;
-        }
+
+
+        //if (SceneLoader.Instance.SceneLoaded("Arena"))
+        //{
+        //    spawnPoint = GameObject.Find("spawnPoint").transform;
+        //    gameObject.transform.position = spawnPoint.position;
+        //}
     }
 
     // Update is called once per frame
     void Update()
     {
-        if(!IsOwner || !MatchManager.Instance.matchActive.Value) //player cannot be controlled unless you are the owner and if the match isnt started
+        if(!IsOwner) //player cannot be controlled unless you are the owner and if the match isnt started
             return;
+
+        Debug.Log("spawnPoint_" + (NetworkManager.LocalClientId + (ulong)1));
+        if (spawnPoint == null && SceneLoader.Instance.SceneLoaded("Arena"))
+            spawnPoint = GameObject.Find("spawnPoint_" + (NetworkManager.LocalClientId + (ulong)1)).transform;
+
+        if (!MatchManager.Instance.matchActive.Value)
+        {
+            gameObject.transform.position = spawnPoint.position;
+            return;
+        }
 
         //raycast from center of player to check if we are on ground
         grounded = Physics.Raycast(transform.position, Vector3.down, playerHeight * 0.5f + 0.2f, groundMask);
@@ -127,4 +148,14 @@ public class PlayerMovement : NetworkBehaviour
     {
         canJump = true;
     }
+
+    void SetLayerRecursively(GameObject obj, int layer)
+    {
+        obj.layer = layer;
+        foreach (Transform child in obj.transform)
+        {
+            SetLayerRecursively(child.gameObject, layer);
+        }
+    }
+
 }
