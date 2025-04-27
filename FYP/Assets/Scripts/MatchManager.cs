@@ -33,7 +33,7 @@ public class MatchManager : NetworkBehaviour
     public NetworkVariable<bool> clientReady = new NetworkVariable<bool>(false);
     public NetworkVariable<FixedString64Bytes> serverAdress = new NetworkVariable<FixedString64Bytes>();
     public NetworkVariable<bool> begunMatch = new NetworkVariable<bool>(false);
-    public NetworkVariable<int> connectedClients = new NetworkVariable<int>(0); 
+    public NetworkVariable<int> connectedClients = new NetworkVariable<int>(0);
 
     public bool devOverride = false;
 
@@ -105,7 +105,7 @@ public class MatchManager : NetworkBehaviour
             {
                 matchActive.Value = false;
             }
-
+            Debug.Log("gellogelo");
             var transport = NetworkManager.Singleton.GetComponent<UnityTransport>();
             if (transport != null)
             {
@@ -287,5 +287,22 @@ public class MatchManager : NetworkBehaviour
     }
 
 
-   
+    public override void OnNetworkSpawn()
+    {
+        base.OnNetworkSpawn();
+
+        if (Instance == null)
+        {
+            Instance = this;
+            Debug.Log("[MatchManager] NetworkSpawned and Instance set ");
+        }
+        else
+        {
+            Debug.LogWarning("[MatchManager] NetworkSpawned but instance already set!");
+        }
+    }
+
+
+
+
 }

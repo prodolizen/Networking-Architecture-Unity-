@@ -7,6 +7,20 @@ using UnityEngine.SceneManagement;
 using TMPro;
 using Unity.Collections;
 using System;
+using UnityEngine.Networking;
+
+[Serializable]
+public class ServerInfo
+{
+    public string ip;
+    public int port;
+}
+
+[Serializable]
+public class ServerList
+{
+    public ServerInfo[] servers;
+}
 
 public class NetworkUI : NetworkBehaviour
 {
@@ -14,8 +28,9 @@ public class NetworkUI : NetworkBehaviour
     public GameObject layerOne;
     public GameObject layerTwo;
     public GameObject layerThree;
-    public GameObject layerFour;    
+    public GameObject layerFour;
     public GameObject layerFive;
+    public GameObject layerSix;
     private string gameIP;
     public GameObject crosshair;
     private Image crosshairImage;
@@ -30,6 +45,10 @@ public class NetworkUI : NetworkBehaviour
     public TMP_Text loggedName;
     private bool loggedIn = false;
     public HostManager hostManager;
+    public TMP_Dropdown serverList;
+    private ServerInfo[] serverInfo;
+    private bool firstRun;
+    public GameObject matchManagerPrefab;
 
     void Awake()
     {
@@ -50,6 +69,8 @@ public class NetworkUI : NetworkBehaviour
         {
             hostManager = FindObjectOfType<HostManager>();
         }
+        firstRun = true;
+        NetworkManager.Singleton.OnServerStarted += TrySpawnMatchManager;
     }
 
     void Update()
@@ -67,11 +88,31 @@ public class NetworkUI : NetworkBehaviour
         {
             clientCount.text = "Connected Clients: " + MatchManager.Instance.connectedClients.Value;
             background.gameObject.SetActive(!MatchManager.Instance.matchActive.Value);
-
+            Debug.Log("glelo");
             //hide ui on match start
             if (MatchManager.Instance.matchActive.Value)
             {
                 uiComps.SetActive(false);
+            }
+        }
+
+        else
+        {
+            if (firstRun)
+            {
+                Debug.Log("hell");
+
+                // Instead of listening for OnServerStarted every frame, check directly:
+                if (NetworkManager.Singleton.IsServer)
+                {
+                    if (FindObjectOfType<MatchManager>() == null)
+                    {
+                        Debug.Log("[SERVER] Spawning MatchManager manually because it's missing...");
+                        var matchManager = Instantiate(matchManagerPrefab);
+                        matchManager.GetComponent<NetworkObject>().Spawn(true);
+                    }
+                }
+                firstRun = false;
             }
         }
     }
@@ -312,6 +353,100 @@ public class NetworkUI : NetworkBehaviour
                 SwapLayers(activeLayer, layerFive);
             else
                 SwapLayers(activeLayer, layerOne);
+        }
+    }
+
+    public void CreateDedicatedServer()
+    {
+        StartCoroutine(StartDedicatedServer());
+    }
+
+    private IEnumerator StartDedicatedServer()
+    {
+        UnityWebRequest request = new UnityWebRequest("https://zendevfyp.click:3000/start-dedicated-server", "POST");
+        yield return request.SendWebRequest();
+
+        if (request.result == UnityWebRequest.Result.Success)
+        {
+            var response = JsonUtility.FromJson<ServerInfo>(request.downloadHandler.text);
+            ConnectToServer(response.ip, response.port);
+        }
+        else
+        {
+            Debug.LogError("Failed to start server: " + request.error);
+        }
+    }
+
+    private void ConnectToServer(string ip, int port)
+    {
+        var transport = NetworkManager.Singleton.GetComponent<Unity.Netcode.Transports.UTP.UnityTransport>();
+        transport.ConnectionData.Address = ip;
+        transport.ConnectionData.Port = (ushort)port;
+        NetworkManager.Singleton.StartClient();
+    }
+
+    public void ListServers()
+    {
+        Debug.Log("hello");
+        StartCoroutine(GetAvailableServers());
+        SwapLayers(activeLayer, layerSix);
+    }
+
+    private IEnumerator GetAvailableServers()
+    {
+        UnityWebRequest request = UnityWebRequest.Get("https://zendevfyp.click:3000/list-dedicated-servers");
+        yield return request.SendWebRequest();
+
+        if (request.result == UnityWebRequest.Result.Success)
+        {
+            Debug.Log("haha");
+            Debug.Log("Server response: " + request.downloadHandler.text); // ADD THIS
+
+            var response = JsonUtility.FromJson<ServerList>(FixJson(request.downloadHandler.text));
+            serverInfo = new ServerInfo[response.servers.Length];
+            if (response.servers.Length > 0)
+            {
+                // ConnectToServer(response.servers[0].ip, response.servers[0].port);
+                for (int i = 0; i < response.servers.Length; i++)
+                {
+                    serverList.options[serverList.value].text = "Select Server";
+                    TMP_Dropdown.OptionData newOption = new TMP_Dropdown.OptionData();
+                    newOption.text = "<size=24>IP: " + response.servers[i].ip + " | PORT: " + response.servers[i].port;
+                    serverInfo[i] = response.servers[i];
+                    serverList.options.Add(newOption);
+                }
+            }
+        }
+        else
+        {
+            Debug.LogError("Failed to get server list: " + request.error);
+        }
+    }
+
+    public void JoinDedicatedServer()
+    {
+        ConnectToServer(serverInfo[serverList.value - 1].ip, serverInfo[serverList.value - 1].port);
+        SwapLayers(activeLayer, layerThree);
+    }
+
+
+    private string FixJson(string value)
+    {
+        value = "{\"servers\":" + value + "}";
+        return value;
+    }
+
+    private void TrySpawnMatchManager()
+    {
+        if (NetworkManager.Singleton.IsServer)
+        {
+            if (FindObjectOfType<MatchManager>() == null)
+            {
+                var matchManager = Instantiate(matchManagerPrefab);
+                matchManager.GetComponent<NetworkObject>().Spawn(true);
+                Debug.Log("[SERVER] Spawned MatchManager manually after server started.");
+                firstRun = false;
+            }
         }
     }
 }
