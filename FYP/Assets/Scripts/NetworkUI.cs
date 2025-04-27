@@ -144,7 +144,7 @@ public class NetworkUI : NetworkBehaviour
             Debug.Log("Setting server IP: " + ip);
 
             matchID.text = roomCode.ToString();
-            MatchManager.Instance.CreateRoomOnServer(roomCode, ip);
+            ServerRoomManager.Instance.CreateRoomOnServer(roomCode, ip);
         }
 
         SwapLayers(layerOne, layerThree);
@@ -214,7 +214,7 @@ public class NetworkUI : NetworkBehaviour
     {
         if (MatchManager.Instance != null)
         {
-            MatchManager.Instance.RegisterAccount(username, password, OnAccountAuthenticated);
+            ServerRoomManager.Instance.RegisterAccount(username, password, OnAccountAuthenticated);
         }
     }
 
@@ -222,7 +222,7 @@ public class NetworkUI : NetworkBehaviour
     {
         if (MatchManager.Instance != null)
         {
-            MatchManager.Instance.LoginAccount(username, password, OnAccountAuthenticated);
+            ServerRoomManager.Instance.LoginAccount(username, password, OnAccountAuthenticated);
         }
     }
 
@@ -280,7 +280,7 @@ public class NetworkUI : NetworkBehaviour
             return;
         }
 
-        if (MatchManager.Instance != null)
+        if (ServerRoomManager.Instance != null)
         {
             int code;
             if (!int.TryParse(gameIP, out code))
@@ -290,7 +290,7 @@ public class NetworkUI : NetworkBehaviour
             }
 
             // Get the server IP using the room code
-            MatchManager.Instance.GetServerIpFromRoomCode(code, (serverIp) =>
+            ServerRoomManager.Instance.GetServerIpFromRoomCode(code, (serverIp) =>
             {
                 if (!string.IsNullOrEmpty(serverIp))
                 {
@@ -334,7 +334,7 @@ public class NetworkUI : NetworkBehaviour
         if (IsServer) // only host should delete
         {
             int roomCode = int.Parse(matchID.text);
-            MatchManager.Instance.DeleteRoomFromServer(roomCode);
+            ServerRoomManager.Instance.DeleteRoomFromServer(roomCode);
         }
     }
 

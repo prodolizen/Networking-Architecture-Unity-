@@ -50,6 +50,6 @@ public class HostManager : MonoBehaviour
     private void CreateRoomOnServer(int roomCode, string serverIp)
     {
         // Implement the call to your server to save the room code and server IP to the database
-        MatchManager.Instance.CreateRoomOnServer(roomCode, serverIp);  // Call the CreateRoomOnServer function in MatchManager
+        ServerRoomManager.Instance.CreateRoomOnServer(roomCode, serverIp);  // Call the CreateRoomOnServer function in MatchManager
     }
 }

@@ -376,6 +376,7 @@
 "Assets/Scripts/ClientNetworkTransform.cs"
 "Assets/Scripts/Globals.cs"
 "Assets/Scripts/HostManager.cs"
+"Assets/Scripts/Knife.cs"
 "Assets/Scripts/MatchManager.cs"
 "Assets/Scripts/MoveCamera.cs"
 "Assets/Scripts/NetworkUI.cs"

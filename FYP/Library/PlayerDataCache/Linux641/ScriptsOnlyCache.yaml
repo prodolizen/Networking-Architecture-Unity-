@@ -5,6 +5,7 @@ ScriptsOnlyBuild:
     - Beamer
     - ClientNetworkTransform
     - HostManager
+    - Knife
     - MAXI
     - MINI
     - MatchManager
@@ -38,6 +39,7 @@ ScriptsOnlyBuild:
     - TMPro.TMP_SpriteAsset
     - TMPro.TMP_StyleSheet
     Unity.TextMeshPro.dll:
+    - TMPro.TMP_Dropdown
     - TMPro.TMP_FontAsset
     - TMPro.TMP_InputField
     - TMPro.TMP_Settings
@@ -56,7 +58,11 @@ ScriptsOnlyBuild:
     - UnityEngine.UI.GraphicRaycaster
     - UnityEngine.UI.Image
     - UnityEngine.UI.LayoutElement
+    - UnityEngine.UI.Mask
     - UnityEngine.UI.RectMask2D
+    - UnityEngine.UI.ScrollRect
+    - UnityEngine.UI.Scrollbar
+    - UnityEngine.UI.Toggle
   serializedClasses:
     Unity.Collections:
     - Unity.Collections.FixedBytes16
@@ -76,6 +82,9 @@ ScriptsOnlyBuild:
     - TMPro.FontAssetCreationSettings
     - TMPro.KerningTable
     - TMPro.TMP_Character
+    - TMPro.TMP_Dropdown/DropdownEvent
+    - TMPro.TMP_Dropdown/OptionData
+    - TMPro.TMP_Dropdown/OptionDataList
     - TMPro.TMP_FontFeatureTable
     - TMPro.TMP_FontWeightPair
     - TMPro.TMP_GlyphAdjustmentRecord
@@ -106,10 +115,16 @@ ScriptsOnlyBuild:
     - UnityEngine.UI.ColorBlock
     - UnityEngine.UI.MaskableGraphic/CullStateChangedEvent
     - UnityEngine.UI.Navigation
+    - UnityEngine.UI.ScrollRect/ScrollRectEvent
+    - UnityEngine.UI.Scrollbar/ScrollEvent
     - UnityEngine.UI.SpriteState
+    - UnityEngine.UI.Toggle/ToggleEvent
   methodsToPreserve:
   - assembly: Assembly-CSharp
     fullTypeName: NetworkUI
+    methodName: JoinDedicatedServer
+  - assembly: Assembly-CSharp
+    fullTypeName: NetworkUI
     methodName: AccountButton
   - assembly: Assembly-CSharp
     fullTypeName: NetworkUI
@@ -134,6 +149,9 @@ ScriptsOnlyBuild:
     methodName: TakeIP
   - assembly: Assembly-CSharp
     fullTypeName: NetworkUI
+    methodName: ListServers
+  - assembly: Assembly-CSharp
+    fullTypeName: NetworkUI
     methodName: JoinGame
   - assembly: Assembly-CSharp
     fullTypeName: NetworkUI
@@ -144,6 +162,9 @@ ScriptsOnlyBuild:
   - assembly: Assembly-CSharp
     fullTypeName: NetworkUI
     methodName: AccountButton
+  - assembly: Assembly-CSharp
+    fullTypeName: NetworkUI
+    methodName: ListServers
   - assembly: Assembly-CSharp
     fullTypeName: NetworkUI
     methodName: JoinGame
@@ -168,6 +189,9 @@ ScriptsOnlyBuild:
   - assembly: Assembly-CSharp
     fullTypeName: NetworkUI
     methodName: EnterIP
+  - assembly: Assembly-CSharp
+    fullTypeName: NetworkUI
+    methodName: JoinDedicatedServer
   sceneClasses:
     Assets/Scenes/Arena.unity:
     - Class: 1
@@ -228,39 +252,41 @@ ScriptsOnlyBuild:
     - Class: 104
       Script: {instanceID: 0}
     - Class: 114
-      Script: {instanceID: 16698}
+      Script: {instanceID: 16746}
     - Class: 114
-      Script: {instanceID: 16748}
+      Script: {instanceID: 16896}
     - Class: 114
-      Script: {instanceID: 16898}
+      Script: {instanceID: 17164}
     - Class: 114
-      Script: {instanceID: 17166}
+      Script: {instanceID: 17472}
     - Class: 114
-      Script: {instanceID: 17474}
+      Script: {instanceID: 17544}
     - Class: 114
-      Script: {instanceID: 17546}
+      Script: {instanceID: 17826}
     - Class: 114
-      Script: {instanceID: 17828}
+      Script: {instanceID: 18008}
     - Class: 114
-      Script: {instanceID: 18010}
+      Script: {instanceID: 18016}
     - Class: 114
-      Script: {instanceID: 18054}
+      Script: {instanceID: 18052}
     - Class: 114
-      Script: {instanceID: 18066}
+      Script: {instanceID: 18064}
     - Class: 114
-      Script: {instanceID: 18278}
+      Script: {instanceID: 18276}
     - Class: 114
-      Script: {instanceID: 18530}
+      Script: {instanceID: 18528}
     - Class: 114
-      Script: {instanceID: 18658}
+      Script: {instanceID: 18656}
     - Class: 114
-      Script: {instanceID: 18864}
+      Script: {instanceID: 18862}
     - Class: 114
-      Script: {instanceID: 18996}
+      Script: {instanceID: 18994}
     - Class: 114
-      Script: {instanceID: 19084}
+      Script: {instanceID: 19082}
     - Class: 114
-      Script: {instanceID: 19218}
+      Script: {instanceID: 19216}
+    - Class: 114
+      Script: {instanceID: 19626}
     - Class: 114
       Script: {instanceID: 19784}
     - Class: 114
@@ -280,31 +306,41 @@ ScriptsOnlyBuild:
     - Class: 114
       Script: {instanceID: 20880}
     - Class: 114
-      Script: {instanceID: 21126}
+      Script: {instanceID: 20934}
     - Class: 114
-      Script: {instanceID: 21688}
+      Script: {instanceID: 20968}
     - Class: 114
-      Script: {instanceID: 21698}
+      Script: {instanceID: 21128}
     - Class: 114
-      Script: {instanceID: 21766}
+      Script: {instanceID: 21690}
     - Class: 114
-      Script: {instanceID: 21974}
+      Script: {instanceID: 21700}
     - Class: 114
-      Script: {instanceID: 21990}
+      Script: {instanceID: 21768}
     - Class: 114
-      Script: {instanceID: 22284}
+      Script: {instanceID: 21804}
     - Class: 114
-      Script: {instanceID: 22392}
+      Script: {instanceID: 21978}
     - Class: 114
-      Script: {instanceID: 22556}
+      Script: {instanceID: 21994}
     - Class: 114
-      Script: {instanceID: 23208}
+      Script: {instanceID: 22288}
     - Class: 114
-      Script: {instanceID: 23430}
+      Script: {instanceID: 22396}
     - Class: 114
-      Script: {instanceID: 24488}
+      Script: {instanceID: 22406}
     - Class: 114
-      Script: {instanceID: 25886}
+      Script: {instanceID: 22560}
+    - Class: 114
+      Script: {instanceID: 23212}
+    - Class: 114
+      Script: {instanceID: 23434}
+    - Class: 114
+      Script: {instanceID: 23700}
+    - Class: 114
+      Script: {instanceID: 24492}
+    - Class: 114
+      Script: {instanceID: 24494}
     - Class: 115
       Script: {instanceID: 0}
     - Class: 128
@@ -332,12 +368,6 @@ ScriptsOnlyBuild:
     assemblyName: UnityEngine.UI
     namespaceName: UnityEngine.UI
     className: ContentSizeFitter
-  - hash:
-      serializedVersion: 2
-      Hash: 540882762544409cc4530e60db00e951
-    assemblyName: UnityEngine.UI
-    namespaceName: UnityEngine.UI
-    className: CanvasScaler
   - hash:
       serializedVersion: 2
       Hash: 55060a7bf226ac385ce19ebd450f199f
@@ -724,7 +754,7 @@ ScriptsOnlyBuild:
     className: BaseInput
   - hash:
       serializedVersion: 2
-      Hash: 7825ce9b9a74e176c96f73f6f4bcc5bc
+      Hash: 90a63718c2a7543383e17c166a14c9c8
     assemblyName: Assembly-CSharp
     namespaceName: 
     className: NetworkUI
@@ -748,7 +778,7 @@ ScriptsOnlyBuild:
     className: TextMeshPro
   - hash:
       serializedVersion: 2
-      Hash: 1982d097789cc72fe7f5c547be7393b2
+      Hash: 8e34ffaadb2b4bbb3ef0f6ab9df125a1
     assemblyName: Assembly-CSharp
     namespaceName: 
     className: PlayerCamera
@@ -800,6 +830,12 @@ ScriptsOnlyBuild:
     assemblyName: Assembly-CSharp
     namespaceName: TMPro.Examples
     className: TMP_UiFrameRateCounter
+  - hash:
+      serializedVersion: 2
+      Hash: ce23145918143e139da7eda4c61f5243
+    assemblyName: Assembly-CSharp
+    namespaceName: 
+    className: TestServer
   - hash:
       serializedVersion: 2
       Hash: b747f5d40674055dd70e18552f1b0447
@@ -1024,6 +1060,12 @@ ScriptsOnlyBuild:
     className: ShaderPropAnimator
   - hash:
       serializedVersion: 2
+      Hash: e71349e1dba8908d71ce6dda7b9cc275
+    assemblyName: Assembly-CSharp
+    namespaceName: 
+    className: Knife
+  - hash:
+      serializedVersion: 2
       Hash: 10c17b309bdca62b4d7fbaf113ed4ca0
     assemblyName: UnityEngine.UI
     namespaceName: UnityEngine.UI
@@ -1148,6 +1190,12 @@ ScriptsOnlyBuild:
     assemblyName: Unity.Netcode.Components
     namespaceName: Unity.Netcode.Components
     className: NetworkRigidbody
+  - hash:
+      serializedVersion: 2
+      Hash: 540882762544409cc4530e60db00e951
+    assemblyName: UnityEngine.UI
+    namespaceName: UnityEngine.UI
+    className: CanvasScaler
   - hash:
       serializedVersion: 2
       Hash: 4166580c620718548959a77fa7b43fc1
@@ -1492,6 +1540,12 @@ ScriptsOnlyBuild:
     className: SignalEmitter
   - hash:
       serializedVersion: 2
+      Hash: 4010133215801e785785403d4364c10c
+    assemblyName: Assembly-CSharp
+    namespaceName: 
+    className: ServerRoomManager
+  - hash:
+      serializedVersion: 2
       Hash: 8b806a0a6ab35b0f445a39a63059ff77
     assemblyName: Assembly-CSharp
     namespaceName: 
@@ -1532,14 +1586,8 @@ ScriptsOnlyBuild:
     assemblyName: Unity.VisualScripting.Core
     namespaceName: Unity.VisualScripting
     className: UnityOnSliderValueChangedMessageListener
-  - hash:
-      serializedVersion: 2
-      Hash: ae8cb4e9be4337ba1c919ee02ce8b4d5
-    assemblyName: Assembly-CSharp
-    namespaceName: 
-    className: ServerRoomManager
   platform: 24
   scenePathNames:
   - Assets/Scenes/Main.unity
   - Assets/Scenes/Arena.unity
-  playerPath: C:/Users/olive/Documents/UnityBuilds/Headless Build 2/GameServer.x86_64
+  playerPath: C:/Users/olive/Documents/UnityBuilds/Headless Build/GameServer.x86_64
