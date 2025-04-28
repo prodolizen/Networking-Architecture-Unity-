@@ -122,6 +122,9 @@ ScriptsOnlyBuild:
   methodsToPreserve:
   - assembly: Assembly-CSharp
     fullTypeName: NetworkUI
+    methodName: ListServers
+  - assembly: Assembly-CSharp
+    fullTypeName: NetworkUI
     methodName: JoinDedicatedServer
   - assembly: Assembly-CSharp
     fullTypeName: NetworkUI
@@ -192,6 +195,9 @@ ScriptsOnlyBuild:
   - assembly: Assembly-CSharp
     fullTypeName: NetworkUI
     methodName: JoinDedicatedServer
+  - assembly: Assembly-CSharp
+    fullTypeName: NetworkUI
+    methodName: ListServers
   sceneClasses:
     Assets/Scenes/Arena.unity:
     - Class: 1
@@ -252,31 +258,31 @@ ScriptsOnlyBuild:
     - Class: 104
       Script: {instanceID: 0}
     - Class: 114
-      Script: {instanceID: 16746}
+      Script: {instanceID: 16744}
     - Class: 114
-      Script: {instanceID: 16896}
+      Script: {instanceID: 16894}
     - Class: 114
-      Script: {instanceID: 17164}
+      Script: {instanceID: 17162}
     - Class: 114
-      Script: {instanceID: 17472}
+      Script: {instanceID: 17470}
     - Class: 114
-      Script: {instanceID: 17544}
+      Script: {instanceID: 17542}
     - Class: 114
-      Script: {instanceID: 17826}
+      Script: {instanceID: 17824}
     - Class: 114
-      Script: {instanceID: 18008}
+      Script: {instanceID: 18006}
     - Class: 114
-      Script: {instanceID: 18016}
+      Script: {instanceID: 18014}
     - Class: 114
-      Script: {instanceID: 18052}
+      Script: {instanceID: 18050}
     - Class: 114
-      Script: {instanceID: 18064}
+      Script: {instanceID: 18062}
     - Class: 114
-      Script: {instanceID: 18276}
+      Script: {instanceID: 18274}
     - Class: 114
-      Script: {instanceID: 18528}
+      Script: {instanceID: 18526}
     - Class: 114
-      Script: {instanceID: 18656}
+      Script: {instanceID: 18654}
     - Class: 114
       Script: {instanceID: 18862}
     - Class: 114
@@ -362,12 +368,6 @@ ScriptsOnlyBuild:
     - Class: 224
       Script: {instanceID: 0}
   scriptHashData:
-  - hash:
-      serializedVersion: 2
-      Hash: d41ab9b5ea92474f9c0a6937a0607ce1
-    assemblyName: UnityEngine.UI
-    namespaceName: UnityEngine.UI
-    className: ContentSizeFitter
   - hash:
       serializedVersion: 2
       Hash: 55060a7bf226ac385ce19ebd450f199f
@@ -704,6 +704,12 @@ ScriptsOnlyBuild:
     assemblyName: Unity.VisualScripting.Core
     namespaceName: Unity.VisualScripting
     className: UnityOnTransformParentChangedMessageListener
+  - hash:
+      serializedVersion: 2
+      Hash: d41ab9b5ea92474f9c0a6937a0607ce1
+    assemblyName: UnityEngine.UI
+    namespaceName: UnityEngine.UI
+    className: ContentSizeFitter
   - hash:
       serializedVersion: 2
       Hash: 94276ae9024096f11eb45749a00116f8

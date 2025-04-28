@@ -1,31 +1,16 @@
 ﻿using System;
-using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
+using Unity.Collections;
 using Unity.Netcode;
 using Unity.Netcode.Transports.UTP;
 using UnityEngine;
-using UnityEngine.SceneManagement;
-using Unity.Collections;
-using UnityEngine.Networking;
-using System.Text;
-using Newtonsoft.Json; // ← Added
-
-//[Serializable]
-//public class AccountData
-//{
-//    public string username;
-//    public string password;
-
-//    public AccountData(string user, string pass)
-//    {
-//        username = user;
-//        password = pass;
-//    }
-//}
 
 public class MatchManager : NetworkBehaviour
 {
     public static MatchManager Instance;
+
+    public static event Action OnMatchManagerReady; // <-- new event
 
     public NetworkVariable<int> score = new NetworkVariable<int>(0);
     public NetworkVariable<bool> matchActive = new NetworkVariable<bool>(false);
@@ -37,20 +22,7 @@ public class MatchManager : NetworkBehaviour
 
     public bool devOverride = false;
 
-    void Awake()
-    {
-        if (Instance == null)
-        {
-            Instance = this;
-            DontDestroyOnLoad(gameObject);
-        }
-        else
-        {
-            Destroy(gameObject);
-        }
-
-        //roomCodes = new NetworkList<Link>();
-    }
+    private Dictionary<ulong, bool> clientReadyStates = new Dictionary<ulong, bool>();
 
     void Update()
     {
@@ -58,70 +30,86 @@ public class MatchManager : NetworkBehaviour
         {
             connectedClients.Value = NetworkManager.Singleton.ConnectedClients.Count;
 
-            if (connectedClients.Value == 2 && hostReady.Value && clientReady.Value || devOverride == true)
-            {
-                matchActive.Value = true;
-                StartMatch();
-            }
-            else
-            {
-                matchActive.Value = false;
-            }
-            Debug.Log("gellogelo");
             var transport = NetworkManager.Singleton.GetComponent<UnityTransport>();
             if (transport != null)
             {
                 serverAdress.Value = transport.ConnectionData.Address;
             }
-
-            //foreach (var link in roomCodes)
-            //{
-            //    Debug.Log($"Room Code: {link.roomCode}, IP: {link.serverIp}");
-            //}
         }
     }
+
+    private void Start()
+    {
+        if (IsServer)
+        {
+            NetworkManager.Singleton.OnClientDisconnectCallback += OnClientDisconnectCallback;
+        }
+    }
+
 
     [ServerRpc(RequireOwnership = false)]
     public void SetReadyStateServerRpc(bool isReady, ulong clientId)
     {
-        if (clientId == NetworkManager.Singleton.LocalClientId)
+        Debug.Log($"[ServerRpc] Client {clientId} set ready to {isReady}");
+
+        if (clientReadyStates.ContainsKey(clientId))
         {
-            hostReady.Value = isReady;
+            clientReadyStates[clientId] = isReady;
         }
         else
         {
-            clientReady.Value = isReady;
+            clientReadyStates.Add(clientId, isReady);
         }
 
-        Debug.Log($"Client {clientId} ready status: {isReady}");
+        Debug.Log($"Ready states now: {string.Join(", ", clientReadyStates.Select(kvp => $"Client {kvp.Key}: {kvp.Value}"))}");
+
+        // Check if all players are ready
+        if (clientReadyStates.Count == NetworkManager.Singleton.ConnectedClients.Count &&
+            clientReadyStates.All(kvp => kvp.Value == true))
+        {
+            Debug.Log("[MatchManager] All players ready. Starting match!");
+            matchActive.Value = true;
+            StartMatch();
+        }
     }
+
 
     private void StartMatch()
     {
         if (IsServer && !begunMatch.Value)
         {
-            //SceneLoader.Instance.LoadScene("Arena", LoadSceneMode.Additive);
             begunMatch.Value = true;
         }
     }
-
 
     public override void OnNetworkSpawn()
     {
         base.OnNetworkSpawn();
 
-        if (Instance == null)
+        if (Instance != null && Instance != this)
         {
-            Instance = this;
-            Debug.Log("[MatchManager] NetworkSpawned and Instance set ");
+            Destroy(gameObject);
+            return;
         }
-        else
-        {
-            Debug.LogWarning("[MatchManager] NetworkSpawned but instance already set!");
-        }
+
+        Instance = this;
+        DontDestroyOnLoad(gameObject);
+        Debug.Log($"[MatchManager] OnNetworkSpawn — isServer={IsServer}, Instance assigned");
+
+        OnMatchManagerReady?.Invoke(); // <-- Notify listeners
     }
 
+    public void testing()
+    {
+        Debug.Log("[Testing] MatchManager method called");
+    }
 
-
+    private void OnClientDisconnectCallback(ulong clientId)
+    {
+        if (clientReadyStates.ContainsKey(clientId))
+        {
+            clientReadyStates.Remove(clientId);
+        }
+    }
 
 }

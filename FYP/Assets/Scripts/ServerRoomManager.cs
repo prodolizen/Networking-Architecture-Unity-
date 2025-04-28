@@ -8,7 +8,7 @@ using UnityEngine.SceneManagement;
 using Unity.Collections;
 using UnityEngine.Networking;
 using System.Text;
-using Newtonsoft.Json; // ← Added
+using Newtonsoft.Json;
 
 [Serializable]
 public class AccountData
@@ -76,84 +76,87 @@ public class ServerRoomManager : NetworkBehaviour
 
     private void Start()
     {
-        //NetworkManager.Singleton.OnServerStarted += () =>
-        //{
-        //    if (!spawned)
-        //    {
-        //        var matchManager = Instantiate(matchManagerPrefab);
-        //        matchManager.GetComponent<NetworkObject>().Spawn(true);
-        //        spawned = true;
-        //        Debug.Log("[ServerRoomManager] Spawned MatchManager at frame " + Time.frameCount);
-        //    }
-        //};
-
 #if UNITY_SERVER
-    if (Application.isBatchMode)
-    {
-        Debug.Log("[SERVER] Headless build detected, starting server...");
-        if (!NetworkManager.Singleton.IsServer && !NetworkManager.Singleton.IsClient)
+        if (Application.isBatchMode)
         {
-            NetworkManager.Singleton.StartServer();
-            SceneManager.LoadScene("Arena", LoadSceneMode.Additive);
+            Debug.Log("[SERVER] Headless build detected, starting server...");
+            if (!NetworkManager.Singleton.IsServer && !NetworkManager.Singleton.IsClient)
+            {
+                NetworkManager.Singleton.StartServer();
+                SceneManager.LoadScene("Arena", LoadSceneMode.Additive);
+            }
         }
-    }
 #endif
 
         NetworkManager.Singleton.OnServerStarted += OnServerStarted;
-    }
-
-    private void Update()
-    {
-        NetworkManager.Singleton.OnServerStarted += () =>
-        {
-            if (!spawned)
-            {
-                var matchManager = Instantiate(matchManagerPrefab);
-                matchManager.GetComponent<NetworkObject>().Spawn(true);
-                spawned = true;
-                Debug.Log("[ServerRoomManager] Spawned MatchManager at frame " + Time.frameCount);
-            }
-        };
-    }
-
-    void OnApplicationQuit()
-    {
-        NetworkManager.Singleton.Shutdown();
+        NetworkManager.Singleton.OnClientDisconnectCallback += OnClientDisconnected;
     }
 
     private void OnServerStarted()
     {
-        Debug.Log("[SERVER] Server started, spawning MatchManager.");
+        Debug.Log("[SERVER] Server started.");
 
-        if (matchManagerPrefab != null)
+        if (!spawned && matchManagerPrefab != null)
         {
+            Debug.Log("[SERVER] Spawning MatchManager prefab...");
             var matchManager = Instantiate(matchManagerPrefab);
             matchManager.GetComponent<NetworkObject>().Spawn(true);
+            spawned = true;
         }
 
         NetworkManager.Singleton.OnClientConnectedCallback += OnClientConnected;
+    }
+
+    private void Update()
+    {
+        // ❌ No spawning MatchManager in Update anymore — removed
+
+#if UNITY_SERVER
+    if (Application.isBatchMode)
+    {
+        NetworkManager.Singleton.OnClientConnectedCallback += OnClientConnected;
+    }
+#endif
+
+    }
+
+    private void OnApplicationQuit()
+    {
+        NetworkManager.Singleton.Shutdown();
     }
 
     private void OnClientConnected(ulong clientId)
     {
         Debug.Log($"[SERVER] Client {clientId} connected, manually spawning player.");
 
-        if (playerPrefab != null)
-        {
-            var playerInstance = Instantiate(playerPrefab);
-            playerInstance.GetComponent<NetworkObject>().SpawnAsPlayerObject(clientId);
-        }
-        else
+        if (playerPrefab == null)
         {
             Debug.LogError("No PlayerPrefab assigned to ServerRoomManager!");
+            return;
         }
+
+        if (NetworkManager.Singleton.ConnectedClients.TryGetValue(clientId, out var networkClient))
+        {
+            if (networkClient.PlayerObject != null)
+            {
+                Debug.LogWarning(
+                    $"Client {clientId} already has a PlayerObject " +
+                    $"(NetworkObjectId = {networkClient.PlayerObject.NetworkObjectId}), skipping spawn."
+                );
+                return;
+            }
+        }
+
+        var playerInstance = Instantiate(playerPrefab);
+        var netObj = playerInstance.GetComponent<NetworkObject>();
+        netObj.SpawnAsPlayerObject(clientId);
     }
 
     public void CreateRoomOnServer(int roomCode, string serverIp)
     {
         Debug.Log($"Creating room with Room Code: {roomCode} and Server IP: {serverIp}");
         RoomData data = new RoomData { roomCode = roomCode, serverIp = serverIp };
-        string json = JsonConvert.SerializeObject(data); // Replaced JsonUtility
+        string json = JsonConvert.SerializeObject(data);
         StartCoroutine(PostRequest($"{baseUrl}/create-room", json));
     }
 
@@ -235,7 +238,6 @@ public class ServerRoomManager : NetworkBehaviour
         StartCoroutine(PostAuthRequest($"{baseUrl}/register", json, "Registered", onSuccess));
     }
 
-    // Overload PostAuthRequest
     private IEnumerator PostAuthRequest(string url, string json, string successMsg, Action onSuccess = null)
     {
         UnityWebRequest request = new UnityWebRequest(url, "POST");
@@ -264,11 +266,25 @@ public class ServerRoomManager : NetworkBehaviour
         if (Instance == null)
         {
             Instance = this;
-            Debug.Log("[ServerRoomManager] NetworkSpawned and Instance set ");
+            Debug.Log("[ServerRoomManager] NetworkSpawned and Instance set");
         }
         else
         {
             Debug.LogWarning("[ServerRoomManager] NetworkSpawned but instance already set!");
+        }
+    }
+
+    private void OnClientDisconnected(ulong clientId)
+    {
+        Debug.Log($"[SERVER] Client {clientId} disconnected — cleaning up.");
+
+        if (NetworkManager.Singleton.ConnectedClients.TryGetValue(clientId, out var networkClient))
+        {
+            var playerObj = networkClient.PlayerObject;
+            if (playerObj != null)
+            {
+                playerObj.Despawn(true);
+            }
         }
     }
 }

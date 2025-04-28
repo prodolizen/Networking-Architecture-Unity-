@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using UnityEngine;
 using Unity.Netcode;
@@ -6,7 +7,6 @@ using Unity.Netcode.Transports.UTP;
 using UnityEngine.SceneManagement;
 using TMPro;
 using Unity.Collections;
-using System;
 using UnityEngine.Networking;
 
 [Serializable]
@@ -49,8 +49,9 @@ public class NetworkUI : NetworkBehaviour
     private ServerInfo[] serverInfo;
     private bool firstRun;
     public GameObject matchManagerPrefab;
+    private bool matchManagerReady = false; // <-- Added
 
-    void Awake()
+    private void Awake()
     {
         if (FindObjectsOfType<NetworkManager>().Length > 1)
         {
@@ -58,6 +59,16 @@ public class NetworkUI : NetworkBehaviour
             return;
         }
         DontDestroyOnLoad(gameObject);
+    }
+
+    private void OnEnable()
+    {
+        MatchManager.OnMatchManagerReady += HandleMatchManagerReady; // <-- Added
+    }
+
+    private void OnDisable()
+    {
+        MatchManager.OnMatchManagerReady -= HandleMatchManagerReady; // <-- Added
     }
 
     void Start()
@@ -77,37 +88,25 @@ public class NetworkUI : NetworkBehaviour
     {
         crosshairImage.color = Globals.CrosshairColour;
 
-        //crosshair.SetActive(MatchManager.Instance.matchActive.Value);
-
-        //if (Input.GetKey(KeyCode.Alpha7))
-        //{
-        //    StartHost();
-        //}
-
-        if (MatchManager.Instance != null)
+        if (MatchManager.Instance != null && matchManagerReady)
         {
             clientCount.text = "Connected Clients: " + MatchManager.Instance.connectedClients.Value;
             background.gameObject.SetActive(!MatchManager.Instance.matchActive.Value);
-            Debug.Log("glelo");
-            //hide ui on match start
+
             if (MatchManager.Instance.matchActive.Value)
             {
                 uiComps.SetActive(false);
             }
+            crosshair.SetActive(MatchManager.Instance.matchActive.Value);
         }
-
         else
         {
             if (firstRun)
             {
-                Debug.Log("hell");
-
-                // Instead of listening for OnServerStarted every frame, check directly:
                 if (NetworkManager.Singleton.IsServer)
                 {
                     if (FindObjectOfType<MatchManager>() == null)
                     {
-                        Debug.Log("[SERVER] Spawning MatchManager manually because it's missing...");
                         var matchManager = Instantiate(matchManagerPrefab);
                         matchManager.GetComponent<NetworkObject>().Spawn(true);
                     }
@@ -136,8 +135,6 @@ public class NetworkUI : NetworkBehaviour
         if (MatchManager.Instance != null)
         {
             int roomCode = UnityEngine.Random.Range(1000, 9999);
-            // string ip = MatchManager.Instance.serverAdress.Value.ToString();
-
             string ip = NetworkManager.Singleton.GetComponent<UnityTransport>().ConnectionData.Address;
             MatchManager.Instance.serverAdress.Value = ip;
 
@@ -149,34 +146,6 @@ public class NetworkUI : NetworkBehaviour
 
         SwapLayers(layerOne, layerThree);
     }
-
-    // Button click for hosting gam
-
-    //public void StartHost()
-    //{
-    //     Disable host creation on local machine, instead start EC2 instance
-    //    if (NetworkManager.Singleton.IsServer || NetworkManager.Singleton.IsHost)
-    //    {
-    //        Debug.LogError("A host is already running!");
-    //        return;
-    //    }
-
-    //     First, we trigger the EC2 server startup
-    //    if (hostManager != null)
-    //    {
-    //        int roomCode = UnityEngine.Random.Range(1000, 9999);
-
-    //         Call HostManager to start the EC2 server and pass the room code
-    //        hostManager.StartHostingGame(roomCode);
-
-    //         Save the room code locally to be shared with others
-    //        matchID.text = roomCode.ToString();
-    //    }
-
-    //     Once EC2 instance is running, allow the user to join the server
-    //    SwapLayers(layerOne, layerThree);
-    //}
-
 
     private void OnClientConnected(ulong clientId)
     {
@@ -226,51 +195,13 @@ public class NetworkUI : NetworkBehaviour
         }
     }
 
-    //check for successful login
     private void OnAccountAuthenticated()
     {
         Debug.Log("User is now authenticated!");
-        // Swap to game layer, enable features, etc.
         loggedName.text = username;
-        SwapLayers(activeLayer, layerFive); // Or wherever you want to go after auth
+        SwapLayers(activeLayer, layerFive);
         loggedIn = true;
     }
-
-    //public void EnterIP()
-    //{
-    //    if (string.IsNullOrEmpty(gameIP))
-    //    {
-    //        Debug.LogError("No room code entered!");
-    //        return;
-    //    }
-
-    //    if (MatchManager.Instance != null)
-    //    {
-    //        int code;
-    //        if (!int.TryParse(gameIP, out code))
-    //        {
-    //            Debug.LogError("Invalid room code.");
-    //            return;
-    //        }
-
-    //        MatchManager.Instance.GetServerIpFromRoomCode(code, (serverIp) =>
-    //        {
-    //            if (!string.IsNullOrEmpty(serverIp))
-    //            {
-    //                Debug.Log("Connecting to IP: " + serverIp);
-    //                UnityTransport transport = NetworkManager.Singleton.GetComponent<UnityTransport>();
-    //                transport.ConnectionData.Address = serverIp;
-    //                matchID.text = code.ToString();
-    //                NetworkManager.Singleton.StartClient();
-    //                StartCoroutine(HideUIAfterConnection());
-    //            }
-    //            else
-    //            {
-    //                Debug.LogError("Room not found!");
-    //            }
-    //        });
-    //    }
-    //}
 
     public void EnterIP()
     {
@@ -289,7 +220,6 @@ public class NetworkUI : NetworkBehaviour
                 return;
             }
 
-            // Get the server IP using the room code
             ServerRoomManager.Instance.GetServerIpFromRoomCode(code, (serverIp) =>
             {
                 if (!string.IsNullOrEmpty(serverIp))
@@ -324,14 +254,21 @@ public class NetworkUI : NetworkBehaviour
         isReady = !isReady;
         readyButton.GetComponentInChildren<Image>().color = isReady ? Color.green : Color.red;
 
-        if (MatchManager.Instance != null)
+        if (MatchManager.Instance != null && matchManagerReady && MatchManager.Instance.IsSpawned) // <-- check MatchManager spawned
         {
+            Debug.Log("[Ready] Sending ready state to server.");
+            MatchManager.Instance.testing();
             MatchManager.Instance.SetReadyStateServerRpc(isReady, NetworkManager.Singleton.LocalClientId);
         }
+        else
+        {
+            Debug.LogWarning("Cannot ready — MatchManager not ready yet!");
+        }
     }
-    void OnApplicationQuit() //delete current room code and ip from SQL DB
+
+    void OnApplicationQuit()
     {
-        if (IsServer) // only host should delete
+        if (IsServer)
         {
             int roomCode = int.Parse(matchID.text);
             ServerRoomManager.Instance.DeleteRoomFromServer(roomCode);
@@ -379,7 +316,7 @@ public class NetworkUI : NetworkBehaviour
 
     private void ConnectToServer(string ip, int port)
     {
-        var transport = NetworkManager.Singleton.GetComponent<Unity.Netcode.Transports.UTP.UnityTransport>();
+        var transport = NetworkManager.Singleton.GetComponent<UnityTransport>();
         transport.ConnectionData.Address = ip;
         transport.ConnectionData.Port = (ushort)port;
         NetworkManager.Singleton.StartClient();
@@ -387,26 +324,29 @@ public class NetworkUI : NetworkBehaviour
 
     public void ListServers()
     {
-        Debug.Log("hello");
         StartCoroutine(GetAvailableServers());
         SwapLayers(activeLayer, layerSix);
     }
 
     private IEnumerator GetAvailableServers()
     {
+        if (serverList.options.Count > 1)
+        {
+            for (int i = 1; i < serverList.options.Count; i++)
+            {
+                serverList.options.RemoveAt(i);
+            }
+        }
+
         UnityWebRequest request = UnityWebRequest.Get("https://zendevfyp.click:3000/list-dedicated-servers");
         yield return request.SendWebRequest();
 
         if (request.result == UnityWebRequest.Result.Success)
         {
-            Debug.Log("haha");
-            Debug.Log("Server response: " + request.downloadHandler.text); // ADD THIS
-
             var response = JsonUtility.FromJson<ServerList>(FixJson(request.downloadHandler.text));
             serverInfo = new ServerInfo[response.servers.Length];
             if (response.servers.Length > 0)
             {
-                // ConnectToServer(response.servers[0].ip, response.servers[0].port);
                 for (int i = 0; i < response.servers.Length; i++)
                 {
                     serverList.options[serverList.value].text = "Select Server";
@@ -429,7 +369,6 @@ public class NetworkUI : NetworkBehaviour
         SwapLayers(activeLayer, layerThree);
     }
 
-
     private string FixJson(string value)
     {
         value = "{\"servers\":" + value + "}";
@@ -448,5 +387,11 @@ public class NetworkUI : NetworkBehaviour
                 firstRun = false;
             }
         }
+    }
+
+    private void HandleMatchManagerReady() // <-- Added
+    {
+        Debug.Log("[NetworkUI] MatchManager networked and ready!");
+        matchManagerReady = true;
     }
 }
