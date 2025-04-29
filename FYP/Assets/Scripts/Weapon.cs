@@ -45,6 +45,7 @@ public class Weapon : NetworkBehaviour
     private WeaponInfo weapon1;
     private WeaponInfo weapon2;
     private WeaponInfo weapon3;
+    private WeaponInfo activeWeapon;
 
     private int lastWeapon1 = 999;
     private int lastWeapon2 = 999;
@@ -97,7 +98,10 @@ public class Weapon : NetworkBehaviour
         
         if (Input.GetMouseButtonDown(0)) // Left mouse button
         {
-            ShootActiveWeapon();
+            if (activeWeapon.obj != null && activeWeapon.script != null)
+            {
+                activeWeapon.script.Shoot(target);
+            }
         }
     }
 
@@ -147,37 +151,22 @@ public class Weapon : NetworkBehaviour
             weapon2.obj.SetActive(false);
             weapon3.obj.SetActive(false);
             weapon1.obj.SetActive(true);
+            activeWeapon = weapon1;
         }
         if (Input.GetKey(Globals.Secondary))
         {
             weapon1.obj.SetActive(false);
             weapon3.obj.SetActive(false);
             weapon2.obj.SetActive(true);
+            activeWeapon = weapon2;
         }
         if (Input.GetKey(Globals.Melee))
         {
             weapon1.obj.SetActive(false);
             weapon2.obj.SetActive(false);
             weapon3.obj.SetActive(true);
+            activeWeapon = weapon3;
         }
-    }
-
-    private void ShootActiveWeapon()
-    {
-        if (weapon1.obj.activeSelf && weapon1.script != null)
-        {
-            weapon1.script.Shoot(target);
-        }
-        else if (weapon2.obj.activeSelf && weapon2.script != null)
-        {
-            weapon2.script.Shoot(target);
-        }
-        else if (weapon3.obj.activeSelf && weapon3.script != null)
-        {
-            weapon3.script.Shoot(target);
-        }
-
-        //weapon1.script.Shoot(target);
     }
 
     public virtual void Shoot(RaycastHit target)

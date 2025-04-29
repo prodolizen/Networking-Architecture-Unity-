@@ -5,6 +5,7 @@ ScriptsOnlyBuild:
     - Beamer
     - ClientNetworkTransform
     - HostManager
+    - Knife
     - MAXI
     - MINI
     - MatchManager
@@ -38,6 +39,7 @@ ScriptsOnlyBuild:
     - TMPro.TMP_SpriteAsset
     - TMPro.TMP_StyleSheet
     Unity.TextMeshPro.dll:
+    - TMPro.TMP_Dropdown
     - TMPro.TMP_FontAsset
     - TMPro.TMP_InputField
     - TMPro.TMP_Settings
@@ -56,7 +58,11 @@ ScriptsOnlyBuild:
     - UnityEngine.UI.GraphicRaycaster
     - UnityEngine.UI.Image
     - UnityEngine.UI.LayoutElement
+    - UnityEngine.UI.Mask
     - UnityEngine.UI.RectMask2D
+    - UnityEngine.UI.ScrollRect
+    - UnityEngine.UI.Scrollbar
+    - UnityEngine.UI.Toggle
   serializedClasses:
     Unity.Collections:
     - Unity.Collections.FixedBytes16
@@ -76,6 +82,9 @@ ScriptsOnlyBuild:
     - TMPro.FontAssetCreationSettings
     - TMPro.KerningTable
     - TMPro.TMP_Character
+    - TMPro.TMP_Dropdown/DropdownEvent
+    - TMPro.TMP_Dropdown/OptionData
+    - TMPro.TMP_Dropdown/OptionDataList
     - TMPro.TMP_FontFeatureTable
     - TMPro.TMP_FontWeightPair
     - TMPro.TMP_GlyphAdjustmentRecord
@@ -106,10 +115,22 @@ ScriptsOnlyBuild:
     - UnityEngine.UI.ColorBlock
     - UnityEngine.UI.MaskableGraphic/CullStateChangedEvent
     - UnityEngine.UI.Navigation
+    - UnityEngine.UI.ScrollRect/ScrollRectEvent
+    - UnityEngine.UI.Scrollbar/ScrollEvent
     - UnityEngine.UI.SpriteState
+    - UnityEngine.UI.Toggle/ToggleEvent
   methodsToPreserve:
   - assembly: Assembly-CSharp
     fullTypeName: NetworkUI
+    methodName: Return
+  - assembly: Assembly-CSharp
+    fullTypeName: NetworkUI
+    methodName: ListServers
+  - assembly: Assembly-CSharp
+    fullTypeName: NetworkUI
+    methodName: JoinDedicatedServer
+  - assembly: Assembly-CSharp
+    fullTypeName: NetworkUI
     methodName: AccountButton
   - assembly: Assembly-CSharp
     fullTypeName: NetworkUI
@@ -134,6 +155,9 @@ ScriptsOnlyBuild:
     methodName: TakeIP
   - assembly: Assembly-CSharp
     fullTypeName: NetworkUI
+    methodName: ListServers
+  - assembly: Assembly-CSharp
+    fullTypeName: NetworkUI
     methodName: JoinGame
   - assembly: Assembly-CSharp
     fullTypeName: NetworkUI
@@ -144,6 +168,12 @@ ScriptsOnlyBuild:
   - assembly: Assembly-CSharp
     fullTypeName: NetworkUI
     methodName: AccountButton
+  - assembly: Assembly-CSharp
+    fullTypeName: NetworkUI
+    methodName: ListServers
+  - assembly: Assembly-CSharp
+    fullTypeName: NetworkUI
+    methodName: ListServers
   - assembly: Assembly-CSharp
     fullTypeName: NetworkUI
     methodName: JoinGame
@@ -168,6 +198,12 @@ ScriptsOnlyBuild:
   - assembly: Assembly-CSharp
     fullTypeName: NetworkUI
     methodName: EnterIP
+  - assembly: Assembly-CSharp
+    fullTypeName: NetworkUI
+    methodName: JoinDedicatedServer
+  - assembly: Assembly-CSharp
+    fullTypeName: NetworkUI
+    methodName: Return
   sceneClasses:
     Assets/Scenes/Arena.unity:
     - Class: 1
@@ -188,11 +224,15 @@ ScriptsOnlyBuild:
       Script: {instanceID: 0}
     - Class: 64
       Script: {instanceID: 0}
+    - Class: 65
+      Script: {instanceID: 0}
     - Class: 89
       Script: {instanceID: 0}
     - Class: 104
       Script: {instanceID: 0}
     - Class: 108
+      Script: {instanceID: 0}
+    - Class: 154
       Script: {instanceID: 0}
     - Class: 157
       Script: {instanceID: 0}
@@ -221,8 +261,6 @@ ScriptsOnlyBuild:
       Script: {instanceID: 0}
     - Class: 54
       Script: {instanceID: 0}
-    - Class: 65
-      Script: {instanceID: 0}
     - Class: 81
       Script: {instanceID: 0}
     - Class: 89
@@ -246,6 +284,8 @@ ScriptsOnlyBuild:
     - Class: 114
       Script: {instanceID: 18010}
     - Class: 114
+      Script: {instanceID: 18018}
+    - Class: 114
       Script: {instanceID: 18054}
     - Class: 114
       Script: {instanceID: 18066}
@@ -264,49 +304,59 @@ ScriptsOnlyBuild:
     - Class: 114
       Script: {instanceID: 19218}
     - Class: 114
-      Script: {instanceID: 19784}
+      Script: {instanceID: 19628}
     - Class: 114
-      Script: {instanceID: 19902}
+      Script: {instanceID: 19786}
     - Class: 114
-      Script: {instanceID: 19920}
+      Script: {instanceID: 19904}
     - Class: 114
-      Script: {instanceID: 20186}
+      Script: {instanceID: 19922}
     - Class: 114
-      Script: {instanceID: 20244}
+      Script: {instanceID: 20188}
     - Class: 114
-      Script: {instanceID: 20444}
+      Script: {instanceID: 20246}
     - Class: 114
-      Script: {instanceID: 20604}
+      Script: {instanceID: 20446}
     - Class: 114
-      Script: {instanceID: 20778}
+      Script: {instanceID: 20606}
     - Class: 114
-      Script: {instanceID: 20880}
+      Script: {instanceID: 20780}
     - Class: 114
-      Script: {instanceID: 21126}
+      Script: {instanceID: 20882}
     - Class: 114
-      Script: {instanceID: 21688}
+      Script: {instanceID: 20936}
     - Class: 114
-      Script: {instanceID: 21698}
+      Script: {instanceID: 20970}
     - Class: 114
-      Script: {instanceID: 21766}
+      Script: {instanceID: 21130}
     - Class: 114
-      Script: {instanceID: 21974}
+      Script: {instanceID: 21692}
     - Class: 114
-      Script: {instanceID: 21990}
+      Script: {instanceID: 21702}
     - Class: 114
-      Script: {instanceID: 22284}
+      Script: {instanceID: 21770}
     - Class: 114
-      Script: {instanceID: 22392}
+      Script: {instanceID: 21978}
     - Class: 114
-      Script: {instanceID: 22556}
+      Script: {instanceID: 21994}
     - Class: 114
-      Script: {instanceID: 23208}
+      Script: {instanceID: 22288}
     - Class: 114
-      Script: {instanceID: 23430}
+      Script: {instanceID: 22396}
     - Class: 114
-      Script: {instanceID: 24488}
+      Script: {instanceID: 22406}
     - Class: 114
-      Script: {instanceID: 24490}
+      Script: {instanceID: 22560}
+    - Class: 114
+      Script: {instanceID: 23212}
+    - Class: 114
+      Script: {instanceID: 23434}
+    - Class: 114
+      Script: {instanceID: 23700}
+    - Class: 114
+      Script: {instanceID: 24492}
+    - Class: 114
+      Script: {instanceID: 24494}
     - Class: 115
       Script: {instanceID: 0}
     - Class: 128
@@ -726,7 +776,7 @@ ScriptsOnlyBuild:
     className: BaseInput
   - hash:
       serializedVersion: 2
-      Hash: 7825ce9b9a74e176c96f73f6f4bcc5bc
+      Hash: 90a63718c2a7543383e17c166a14c9c8
     assemblyName: Assembly-CSharp
     namespaceName: 
     className: NetworkUI
@@ -802,6 +852,12 @@ ScriptsOnlyBuild:
     assemblyName: Assembly-CSharp
     namespaceName: TMPro.Examples
     className: TMP_UiFrameRateCounter
+  - hash:
+      serializedVersion: 2
+      Hash: ce23145918143e139da7eda4c61f5243
+    assemblyName: Assembly-CSharp
+    namespaceName: 
+    className: TestServer
   - hash:
       serializedVersion: 2
       Hash: b747f5d40674055dd70e18552f1b0447
@@ -1024,6 +1080,12 @@ ScriptsOnlyBuild:
     assemblyName: Assembly-CSharp
     namespaceName: TMPro.Examples
     className: ShaderPropAnimator
+  - hash:
+      serializedVersion: 2
+      Hash: e71349e1dba8908d71ce6dda7b9cc275
+    assemblyName: Assembly-CSharp
+    namespaceName: 
+    className: Knife
   - hash:
       serializedVersion: 2
       Hash: 10c17b309bdca62b4d7fbaf113ed4ca0
@@ -1494,7 +1556,7 @@ ScriptsOnlyBuild:
     className: SignalEmitter
   - hash:
       serializedVersion: 2
-      Hash: ae8cb4e9be4337ba1c919ee02ce8b4d5
+      Hash: 4010133215801e785785403d4364c10c
     assemblyName: Assembly-CSharp
     namespaceName: 
     className: ServerRoomManager
@@ -1540,12 +1602,6 @@ ScriptsOnlyBuild:
     assemblyName: Unity.VisualScripting.Core
     namespaceName: Unity.VisualScripting
     className: UnityOnSliderValueChangedMessageListener
-  - hash:
-      serializedVersion: 2
-      Hash: ce23145918143e139da7eda4c61f5243
-    assemblyName: Assembly-CSharp
-    namespaceName: 
-    className: TestServer
   platform: 19
   scenePathNames:
   - Assets/Scenes/Main.unity

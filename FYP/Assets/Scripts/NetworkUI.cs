@@ -31,6 +31,9 @@ public class NetworkUI : NetworkBehaviour
     public GameObject layerFour;
     public GameObject layerFive;
     public GameObject layerSix;
+    private GameObject activeLayer;
+    private GameObject prevLayer;
+
     private string gameIP;
     public GameObject crosshair;
     private Image crosshairImage;
@@ -39,7 +42,6 @@ public class NetworkUI : NetworkBehaviour
     private bool isReady = false;
     public Button readyButton;
     public Image background;
-    private GameObject activeLayer;
     private string username;
     private string password;
     public TMP_Text loggedName;
@@ -157,6 +159,7 @@ public class NetworkUI : NetworkBehaviour
         layer1.SetActive(false);
         layer2.SetActive(true);
         activeLayer = layer2;
+        prevLayer = layer1;
     }
 
     public void JoinGame()
@@ -393,5 +396,17 @@ public class NetworkUI : NetworkBehaviour
     {
         Debug.Log("[NetworkUI] MatchManager networked and ready!");
         matchManagerReady = true;
+    }
+
+    public void Return()
+    {
+        if (activeLayer == layerThree && NetworkManager.IsHost)
+        {
+            int roomCode = int.Parse(matchID.text);
+            ServerRoomManager.Instance.DeleteRoomFromServer(roomCode);
+            NetworkManager.Singleton.Shutdown();
+        }
+
+        SwapLayers(activeLayer, prevLayer);
     }
 }
