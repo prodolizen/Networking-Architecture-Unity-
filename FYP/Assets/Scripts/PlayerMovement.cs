@@ -1,34 +1,62 @@
 using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 using Unity.Netcode;
-using Unity.VisualScripting;
+using System.Collections.Generic;
 
 public class PlayerMovement : NetworkBehaviour
 {
     private float moveSpeed;
     public Transform orientation;
-    private float horizontalInput;
-    private float verticalInput;
-    private Vector3 moveDirection;
     private Rigidbody rb;
     public GameObject playerCharacter;
 
-    //jumping
+    // Jumping
     public float jumpForce;
     public float jumpCooldown;
     public float airMultiplier;
     private bool canJump = true;
     private KeyCode jumpKey;
 
-    //check if player is on ground
+    // Ground check
     public float playerHeight;
     public LayerMask groundMask;
     private bool grounded;
-    public float groundDrag;
+    public float groundDrag = 5f;
     private Transform spawnPoint;
 
-    // Start is called before the first frame update
+    // Networked input from client
+    private Vector2 networkedMoveInput;
+    private bool networkedJumpInput;
+    private Quaternion networkedRotation;
+
+
+    //client side prediction
+    public struct PlayerInputState
+    {
+        public Vector2 moveInput;
+        public bool jumpInput;
+        public int tick;
+
+        public PlayerInputState(Vector2 moveInput, bool jumpInput, int tick)
+        {
+            this.moveInput = moveInput;
+            this.jumpInput = jumpInput;
+            this.tick = tick;
+        }
+    }
+
+    private List<PlayerInputState> inputBuffer = new List<PlayerInputState>();
+
+    private int localTick;
+
+    private Vector2 currentInput;
+    private bool currentJumpInput;
+
+    private Vector3 serverPosition;
+    private Quaternion serverRotation;
+    private int serverLastReceivedTick;
+
+
     void Start()
     {
         moveSpeed = Globals.PlayerMoveSpeed;
@@ -36,80 +64,62 @@ public class PlayerMovement : NetworkBehaviour
         rb.freezeRotation = true;
         jumpKey = Globals.JumpKey;
 
-        //if (IsOwner) //set player self to not be seen by player camera
-        //{
-        //    playerCharacter.layer = 7;
-
-        //    foreach (Transform child in playerCharacter.transform)
-        //    {
-        //        child.gameObject.layer = 7;
-        //    }
-        //}
-
         if (IsOwner)
         {
             SetLayerRecursively(playerCharacter, 7); // Hide local player
         }
         else
         {
-            SetLayerRecursively(playerCharacter, 0); // Show other players on Default layer (0)
+            SetLayerRecursively(playerCharacter, 0); // Show other players normally
         }
-
-
-
-        //if (SceneLoader.Instance.SceneLoaded("Arena"))
-        //{
-        //    spawnPoint = GameObject.Find("spawnPoint").transform;
-        //    gameObject.transform.position = spawnPoint.position;
-        //}
     }
 
-    // Update is called once per frame
     void Update()
-    {
-        if(!IsOwner) //player cannot be controlled unless you are the owner and if the match isnt started
-            return;
-
-        Debug.Log("spawnPoint_" + (NetworkManager.LocalClientId + (ulong)1));
-        if (spawnPoint == null && SceneLoader.Instance.SceneLoaded("Arena"))
-            spawnPoint = GameObject.Find("spawnPoint_" + (NetworkManager.LocalClientId + (ulong)1)).transform;
-
-        if (!MatchManager.Instance.matchActive.Value)
-        {
-            gameObject.transform.position = spawnPoint.position;
-            return;
-        }
-
-        //raycast from center of player to check if we are on ground
-        grounded = Physics.Raycast(transform.position, Vector3.down, playerHeight * 0.5f + 0.2f, groundMask);
-
-        RegisterInput();
-
-        if(grounded)
-            rb.drag = groundDrag;
-        else
-            rb.drag = 0;
-
-        //prevent player from falling / glitching through floor
-        //if (gameObject.transform.position.y < 0.8f)
-          //  gameObject.transform.position = new Vector3(gameObject.transform.position.x, 0.8f, gameObject.transform.position.z);
-    }
-
-    private void FixedUpdate()
     {
         if (!IsOwner)
             return;
 
-        MovePlayer();
+        localTick++;
+
+        if (Input.GetKey(KeyCode.LeftShift))
+            moveSpeed = Globals.PlayerMoveSpeed;
+        else
+            moveSpeed = Globals.PlayerSprintSpeed;
+
+        Vector2 moveInput = new Vector2(Input.GetAxisRaw("Horizontal"), Input.GetAxisRaw("Vertical"));
+        bool jumpInput = Input.GetKey(jumpKey);
+
+        currentInput = moveInput;
+        currentJumpInput = jumpInput;
+
+        // Save input locally
+        PlayerInputState inputState = new PlayerInputState(moveInput, jumpInput, localTick);
+        inputBuffer.Add(inputState);
+
+        // Immediately predict movement locally
+        PredictMove(inputState);
+
+        // Send input to server
+        SendInputServerRpc(moveInput, jumpInput, localTick, orientation.rotation);
     }
 
-    private void RegisterInput()
-    {
-        horizontalInput = Input.GetAxisRaw("Horizontal");
-        verticalInput = Input.GetAxisRaw("Vertical");
 
-        //jump
-        if (Input.GetKey(jumpKey) && canJump && grounded)
+    private void FixedUpdate()
+    {
+        if (!IsServer)
+            return;
+
+        grounded = Physics.Raycast(transform.position, Vector3.down, playerHeight * 0.5f + 0.2f, groundMask);
+        orientation.rotation = networkedRotation;
+
+        if (grounded)
+            rb.drag = groundDrag; // e.g., 4f - 6f
+        else
+            rb.drag = 0f;
+
+        MovePlayer();
+
+        if (networkedJumpInput && canJump && grounded)
         {
             canJump = false;
             Jump();
@@ -117,18 +127,32 @@ public class PlayerMovement : NetworkBehaviour
         }
     }
 
+    [ServerRpc]
+    private void SendInputServerRpc(Vector2 moveInput, bool jumpInput, int tick, Quaternion rotation)
+    {
+        // Apply inputs server side
+        ApplyServerMovement(moveInput, jumpInput, rotation);
+
+        // After moving, send back authoritative state
+        SendStateToClientClientRpc(transform.position, transform.rotation, tick);
+    }
+
+
+
     private void MovePlayer()
     {
-        moveDirection = orientation.forward * verticalInput + orientation.right * horizontalInput;
+        Vector3 moveDirection = orientation.forward * networkedMoveInput.y + orientation.right * networkedMoveInput.x;
 
-        if(grounded)
+        if (grounded)
+        {
             rb.AddForce(moveDirection.normalized * moveSpeed * 10f, ForceMode.Force);
-
+        }
         else
+        {
             rb.AddForce(moveDirection.normalized * moveSpeed * 10f * airMultiplier, ForceMode.Force);
+        }
 
-
-        //limit speed
+        // Limit horizontal speed
         Vector3 flatVelocity = new Vector3(rb.velocity.x, 0f, rb.velocity.z);
 
         if (flatVelocity.magnitude > moveSpeed)
@@ -138,10 +162,11 @@ public class PlayerMovement : NetworkBehaviour
         }
     }
 
+
     private void Jump()
     {
         rb.velocity = new Vector3(rb.velocity.x, 0f, rb.velocity.z);
-        rb.AddForce(transform.up * jumpForce, ForceMode.Impulse);
+        rb.AddForce(Vector3.up * jumpForce, ForceMode.Impulse);
     }
 
     private void ResetJump()
@@ -149,7 +174,7 @@ public class PlayerMovement : NetworkBehaviour
         canJump = true;
     }
 
-    void SetLayerRecursively(GameObject obj, int layer)
+    private void SetLayerRecursively(GameObject obj, int layer)
     {
         obj.layer = layer;
         foreach (Transform child in obj.transform)
@@ -157,5 +182,75 @@ public class PlayerMovement : NetworkBehaviour
             SetLayerRecursively(child.gameObject, layer);
         }
     }
+
+    private void PredictMove(PlayerInputState inputState)
+    {
+        Vector3 moveDirection = orientation.forward * inputState.moveInput.y + orientation.right * inputState.moveInput.x;
+
+        if (grounded)
+            rb.AddForce(moveDirection.normalized * moveSpeed * 10f, ForceMode.Force);
+        else
+            rb.AddForce(moveDirection.normalized * moveSpeed * 10f * airMultiplier, ForceMode.Force);
+
+        if (inputState.jumpInput && canJump && grounded)
+        {
+            canJump = false;
+            Jump();
+            Invoke(nameof(ResetJump), jumpCooldown);
+        }
+    }
+
+    private void ApplyServerMovement(Vector2 moveInput, bool jumpInput, Quaternion rotation)
+    {
+        orientation.rotation = rotation;
+
+        Vector3 moveDirection = orientation.forward * moveInput.y + orientation.right * moveInput.x;
+
+        if (grounded)
+            rb.AddForce(moveDirection.normalized * moveSpeed * 10f, ForceMode.Force);
+        else
+            rb.AddForce(moveDirection.normalized * moveSpeed * 10f * airMultiplier, ForceMode.Force);
+
+        if (jumpInput && canJump && grounded)
+        {
+            canJump = false;
+            Jump();
+            Invoke(nameof(ResetJump), jumpCooldown);
+        }
+    }
+
+    [ClientRpc]
+    private void SendStateToClientClientRpc(Vector3 pos, Quaternion rot, int serverTick)
+    {
+        if (!IsOwner)
+            return;
+
+        serverPosition = pos;
+        serverRotation = rot;
+        serverLastReceivedTick = serverTick;
+
+        Reconcile();
+    }
+
+    private float correctionSpeed = 10.0f; // adjust this value to control smoothing
+
+    private void Reconcile()
+    {
+        float distanceError = Vector3.Distance(transform.position, serverPosition);
+
+        if (distanceError > 0.05f) // allow tiny tolerance
+        {
+           // Debug.Log($"[Reconcile] Correction needed: {distanceError}");
+
+            // Instead of snapping, interpolate smoothly
+            transform.position = Vector3.Lerp(transform.position, serverPosition, Time.deltaTime * correctionSpeed);
+            transform.rotation = Quaternion.Lerp(transform.rotation, serverRotation, Time.deltaTime * correctionSpeed);
+
+            // Remove acknowledged inputs
+            inputBuffer.RemoveAll(x => x.tick <= serverLastReceivedTick);
+        }
+    }
+
+
 
 }
