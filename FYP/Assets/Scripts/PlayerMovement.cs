@@ -1,7 +1,6 @@
-using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
 using Unity.Netcode;
-using System.Collections.Generic;
 
 public class PlayerMovement : NetworkBehaviour
 {
@@ -10,27 +9,29 @@ public class PlayerMovement : NetworkBehaviour
     private Rigidbody rb;
     public GameObject playerCharacter;
 
-    // Jumping
     public float jumpForce;
     public float jumpCooldown;
     public float airMultiplier;
     private bool canJump = true;
     private KeyCode jumpKey;
 
-    // Ground check
     public float playerHeight;
     public LayerMask groundMask;
     private bool grounded;
     public float groundDrag = 5f;
-    private Transform spawnPoint;
 
-    // Networked input from client
-    private Vector2 networkedMoveInput;
-    private bool networkedJumpInput;
-    private Quaternion networkedRotation;
+    private Vector2 currentInput;
+    private bool currentJumpInput;
+    private int localTick;
 
+    private Dictionary<ulong, PlayerInputState> serverInputBuffer = new Dictionary<ulong, PlayerInputState>();
 
-    //client side prediction
+    private Vector3 serverPosition;
+    private Quaternion serverRotation;
+    private int serverLastReceivedTick;
+
+    private List<PlayerInputState> inputBuffer = new List<PlayerInputState>();
+
     public struct PlayerInputState
     {
         public Vector2 moveInput;
@@ -45,19 +46,42 @@ public class PlayerMovement : NetworkBehaviour
         }
     }
 
-    private List<PlayerInputState> inputBuffer = new List<PlayerInputState>();
+    private Vector2 networkedMoveInput;
+    private bool networkedJumpInput;
+    private Quaternion networkedRotation;
 
-    private int localTick;
+    public override void OnNetworkSpawn()
+    {
+        base.OnNetworkSpawn();
 
-    private Vector2 currentInput;
-    private bool currentJumpInput;
+        if (IsServer)
+        {
+            Vector3 spawnPosition = GetSpawnPosition(OwnerClientId);
+            transform.position = spawnPosition;
+            serverPosition = spawnPosition;   // <- ADD THIS LINE
+            serverRotation = transform.rotation;  // <- And this
+            SetSpawnClientRpc(spawnPosition);
+        }
+    }
 
-    private Vector3 serverPosition;
-    private Quaternion serverRotation;
-    private int serverLastReceivedTick;
 
+    [ClientRpc]
+    private void SetSpawnClientRpc(Vector3 spawnPos)
+    {
+        if (!IsServer)
+            transform.position = spawnPos;
+    }
 
-    void Start()
+    private Vector3 GetSpawnPosition(ulong clientId)
+    {
+        GameObject spawnPoint = GameObject.Find($"spawnPoint_{clientId + 1}");
+        if (spawnPoint != null)
+            return spawnPoint.transform.position;
+        else
+            return new Vector3(5f * clientId, 1, 0); // Fallback
+    }
+
+    private void Start()
     {
         moveSpeed = Globals.PlayerMoveSpeed;
         rb = GetComponent<Rigidbody>();
@@ -66,25 +90,33 @@ public class PlayerMovement : NetworkBehaviour
 
         if (IsOwner)
         {
-            SetLayerRecursively(playerCharacter, 7); // Hide local player
+            SetLayerRecursively(playerCharacter, 7);
+            rb.isKinematic = false;
+            Debug.Log($"[Start] Player {OwnerClientId} owns this object (Local Player)");
         }
         else
         {
-            SetLayerRecursively(playerCharacter, 0); // Show other players normally
+            SetLayerRecursively(playerCharacter, 0);
+            if (IsServer)
+            {
+                rb.isKinematic = false;
+            }
+            else
+            {
+                rb.isKinematic = true;
+            }
+            Debug.Log($"[Start] Player {OwnerClientId} is NOT owned by us (Remote Player)");
         }
     }
 
-    void Update()
+    private void Update()
     {
-        if (!IsOwner)
+        if (!IsOwner || MatchManager.Instance == null || !MatchManager.Instance.matchActive.Value)
             return;
 
         localTick++;
 
-        if (Input.GetKey(KeyCode.LeftShift))
-            moveSpeed = Globals.PlayerMoveSpeed;
-        else
-            moveSpeed = Globals.PlayerSprintSpeed;
+        moveSpeed = Input.GetKey(KeyCode.LeftShift) ? Globals.PlayerSprintSpeed : Globals.PlayerMoveSpeed;
 
         Vector2 moveInput = new Vector2(Input.GetAxisRaw("Horizontal"), Input.GetAxisRaw("Vertical"));
         bool jumpInput = Input.GetKey(jumpKey);
@@ -92,34 +124,83 @@ public class PlayerMovement : NetworkBehaviour
         currentInput = moveInput;
         currentJumpInput = jumpInput;
 
-        // Save input locally
         PlayerInputState inputState = new PlayerInputState(moveInput, jumpInput, localTick);
         inputBuffer.Add(inputState);
 
-        // Immediately predict movement locally
-        PredictMove(inputState);
-
-        // Send input to server
         SendInputServerRpc(moveInput, jumpInput, localTick, orientation.rotation);
     }
 
-
     private void FixedUpdate()
     {
-        if (!IsServer)
+        if (MatchManager.Instance == null || !MatchManager.Instance.matchActive.Value)
             return;
 
+        if (IsOwner)
+        {
+            UpdateGrounded();
+            PredictMove(new PlayerInputState(currentInput, currentJumpInput, localTick));
+        }
+
+        if (IsServer)
+        {
+            UpdateGrounded();
+            orientation.rotation = networkedRotation;
+
+            //// ONLY apply server movement if the player sent input
+            //if (networkedMoveInput != Vector2.zero || networkedJumpInput)
+            //{
+            //    ApplyMovement(networkedMoveInput, networkedJumpInput);
+            //}
+        }
+        else if (!IsOwner)
+        {
+            // Remote players interpolate
+            transform.position = Vector3.Lerp(transform.position, serverPosition, Time.fixedDeltaTime * 10f);
+            transform.rotation = Quaternion.Lerp(transform.rotation, serverRotation, Time.fixedDeltaTime * 10f);
+        }
+    }
+
+
+
+    private void UpdateGrounded()
+    {
         grounded = Physics.Raycast(transform.position, Vector3.down, playerHeight * 0.5f + 0.2f, groundMask);
-        orientation.rotation = networkedRotation;
+        rb.drag = grounded ? groundDrag : 0f;
+    }
+
+    private void PredictMove(PlayerInputState inputState)
+    {
+        Vector3 moveDirection = orientation.forward * inputState.moveInput.y + orientation.right * inputState.moveInput.x;
 
         if (grounded)
-            rb.drag = groundDrag; // e.g., 4f - 6f
+            rb.AddForce(moveDirection.normalized * moveSpeed * 10f, ForceMode.Force);
         else
-            rb.drag = 0f;
+            rb.AddForce(moveDirection.normalized * moveSpeed * 10f * airMultiplier, ForceMode.Force);
 
-        MovePlayer();
+        ClampVelocity();
 
-        if (networkedJumpInput && canJump && grounded)
+        if (inputState.jumpInput && canJump && grounded)
+        {
+            canJump = false;
+            Jump();
+            Invoke(nameof(ResetJump), jumpCooldown);
+        }
+
+        Debug.Log($"[PredictMove] Client {OwnerClientId} local position: {transform.position}");
+    }
+
+    private void ApplyMovement(Vector2 moveInput, bool jumpInput)
+    {
+        Vector3 moveDirection = orientation.forward * moveInput.y + orientation.right * moveInput.x;
+
+        if (grounded)
+            rb.AddForce(moveDirection.normalized * moveSpeed * 10f, ForceMode.Force);
+        else
+            rb.AddForce(moveDirection.normalized * moveSpeed * 10f * airMultiplier, ForceMode.Force);
+
+        ClampVelocity();
+
+        if (jumpInput && canJump && grounded)
         {
             canJump = false;
             Jump();
@@ -127,32 +208,8 @@ public class PlayerMovement : NetworkBehaviour
         }
     }
 
-    [ServerRpc]
-    private void SendInputServerRpc(Vector2 moveInput, bool jumpInput, int tick, Quaternion rotation)
+    private void ClampVelocity()
     {
-        // Apply inputs server side
-        ApplyServerMovement(moveInput, jumpInput, rotation);
-
-        // After moving, send back authoritative state
-        SendStateToClientClientRpc(transform.position, transform.rotation, tick);
-    }
-
-
-
-    private void MovePlayer()
-    {
-        Vector3 moveDirection = orientation.forward * networkedMoveInput.y + orientation.right * networkedMoveInput.x;
-
-        if (grounded)
-        {
-            rb.AddForce(moveDirection.normalized * moveSpeed * 10f, ForceMode.Force);
-        }
-        else
-        {
-            rb.AddForce(moveDirection.normalized * moveSpeed * 10f * airMultiplier, ForceMode.Force);
-        }
-
-        // Limit horizontal speed
         Vector3 flatVelocity = new Vector3(rb.velocity.x, 0f, rb.velocity.z);
 
         if (flatVelocity.magnitude > moveSpeed)
@@ -161,8 +218,6 @@ public class PlayerMovement : NetworkBehaviour
             rb.velocity = new Vector3(limitedVelocity.x, rb.velocity.y, limitedVelocity.z);
         }
     }
-
-
 
     private void Jump()
     {
@@ -184,33 +239,54 @@ public class PlayerMovement : NetworkBehaviour
         }
     }
 
-    private void PredictMove(PlayerInputState inputState)
+    [ServerRpc(RequireOwnership = false)]
+    private void SendInputServerRpc(Vector2 moveInput, bool jumpInput, int tick, Quaternion rotation, ServerRpcParams rpcParams = default)
     {
-        Vector3 moveDirection = orientation.forward * inputState.moveInput.y + orientation.right * inputState.moveInput.x;
-
-        if (grounded)
-            rb.AddForce(moveDirection.normalized * moveSpeed * 10f, ForceMode.Force);
-        else
-            rb.AddForce(moveDirection.normalized * moveSpeed * 10f * airMultiplier, ForceMode.Force);
-
-        if (inputState.jumpInput && canJump && grounded)
+        if (rpcParams.Receive.SenderClientId != OwnerClientId)
         {
-            canJump = false;
-            Jump();
-            Invoke(nameof(ResetJump), jumpCooldown);
+            Debug.LogWarning($"[ServerRpc] Wrong client tried to move object! Sender={rpcParams.Receive.SenderClientId} Owner={OwnerClientId}");
+            return;
         }
-    }
 
-    private void ApplyServerMovement(Vector2 moveInput, bool jumpInput, Quaternion rotation)
-    {
+        // Update orientation immediately
         orientation.rotation = rotation;
 
-        Vector3 moveDirection = orientation.forward * moveInput.y + orientation.right * moveInput.x;
+        // Move the player right now using the input
+        ServerMove(moveInput, jumpInput);
 
-        if (grounded)
-            rb.AddForce(moveDirection.normalized * moveSpeed * 10f, ForceMode.Force);
-        else
-            rb.AddForce(moveDirection.normalized * moveSpeed * 10f * airMultiplier, ForceMode.Force);
+        // Send corrected position back to ONLY the owner client
+        SendStateToClientClientRpc(transform.position, transform.rotation, tick, OwnerClientId);
+    }
+
+
+    [ClientRpc]
+    private void SendStateToClientClientRpc(Vector3 pos, Quaternion rot, int serverTick, ulong clientId)
+    {
+        if (!IsOwner || NetworkManager.Singleton.LocalClientId != clientId)
+            return;
+
+        Debug.Log($"[ClientRpc] Local Client {NetworkManager.Singleton.LocalClientId} applying server position {pos}");
+
+        serverPosition = pos;
+        serverRotation = rot;
+        serverLastReceivedTick = serverTick;
+    }
+
+    private void ServerMove(Vector2 moveInput, bool jumpInput)
+    {
+        UpdateGrounded();
+
+        if (moveInput.magnitude > 0.1f)
+        {
+            Vector3 moveDirection = orientation.forward * moveInput.y + orientation.right * moveInput.x;
+
+            if (grounded)
+                rb.AddForce(moveDirection.normalized * moveSpeed * 10f, ForceMode.Force);
+            else
+                rb.AddForce(moveDirection.normalized * moveSpeed * 10f * airMultiplier, ForceMode.Force);
+
+            ClampVelocity();
+        }
 
         if (jumpInput && canJump && grounded)
         {
@@ -218,40 +294,9 @@ public class PlayerMovement : NetworkBehaviour
             Jump();
             Invoke(nameof(ResetJump), jumpCooldown);
         }
+
+        Debug.Log($"[ServerMove] Moving player {OwnerClientId} to {transform.position}");
     }
-
-    [ClientRpc]
-    private void SendStateToClientClientRpc(Vector3 pos, Quaternion rot, int serverTick)
-    {
-        if (!IsOwner)
-            return;
-
-        serverPosition = pos;
-        serverRotation = rot;
-        serverLastReceivedTick = serverTick;
-
-        Reconcile();
-    }
-
-    private float correctionSpeed = 10.0f; // adjust this value to control smoothing
-
-    private void Reconcile()
-    {
-        float distanceError = Vector3.Distance(transform.position, serverPosition);
-
-        if (distanceError > 0.05f) // allow tiny tolerance
-        {
-           // Debug.Log($"[Reconcile] Correction needed: {distanceError}");
-
-            // Instead of snapping, interpolate smoothly
-            transform.position = Vector3.Lerp(transform.position, serverPosition, Time.deltaTime * correctionSpeed);
-            transform.rotation = Quaternion.Lerp(transform.rotation, serverRotation, Time.deltaTime * correctionSpeed);
-
-            // Remove acknowledged inputs
-            inputBuffer.RemoveAll(x => x.tick <= serverLastReceivedTick);
-        }
-    }
-
 
 
 }

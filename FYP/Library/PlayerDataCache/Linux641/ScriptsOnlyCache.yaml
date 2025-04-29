@@ -170,6 +170,9 @@ ScriptsOnlyBuild:
     methodName: AccountButton
   - assembly: Assembly-CSharp
     fullTypeName: NetworkUI
+    methodName: Return
+  - assembly: Assembly-CSharp
+    fullTypeName: NetworkUI
     methodName: ListServers
   - assembly: Assembly-CSharp
     fullTypeName: NetworkUI
@@ -201,9 +204,6 @@ ScriptsOnlyBuild:
   - assembly: Assembly-CSharp
     fullTypeName: NetworkUI
     methodName: JoinDedicatedServer
-  - assembly: Assembly-CSharp
-    fullTypeName: NetworkUI
-    methodName: Return
   sceneClasses:
     Assets/Scenes/Arena.unity:
     - Class: 1

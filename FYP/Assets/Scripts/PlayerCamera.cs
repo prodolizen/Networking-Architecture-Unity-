@@ -5,27 +5,42 @@ using Unity.Netcode;
 
 public class PlayerCamera : NetworkBehaviour
 {
-    float sensX;
-    float sensY;
+    private float sensX;
+    private float sensY;
 
     public Transform orientation;
     public Transform weaponHolder;
 
-    float rotationX;
-    float rotationY;
+    private float rotationX;
+    private float rotationY;
+
+    private Vector2 currentLookInput;
 
     private void Start()
     {
-        //Cursor.lockState = CursorLockMode.Locked;
-        //Cursor.visible = false;
-
         sensX = Globals.PlayerCamSensX;
         sensY = Globals.PlayerCamSensY;
+
+        Camera cam = GetComponent<Camera>();
+
+        if (IsOwner)
+        {
+            //Cursor.lockState = CursorLockMode.Locked;
+            // Cursor.visible = false;
+
+            if (cam != null)
+                cam.enabled = true;
+        }
+        else
+        {
+            if (cam != null)
+                cam.enabled = false;
+        }
     }
 
     private void Update()
     {
-        if (!IsOwner || !MatchManager.Instance.matchActive.Value)
+        if (!IsOwner || MatchManager.Instance == null || !MatchManager.Instance.matchActive.Value)
             return;
 
         if (Cursor.lockState != CursorLockMode.Locked)
@@ -34,23 +49,33 @@ public class PlayerCamera : NetworkBehaviour
         if (Cursor.visible == true)
             Cursor.visible = false;
 
-        float mouseX = Input.GetAxisRaw("Mouse X") * Time.deltaTime * sensX;
-        float mouseY = Input.GetAxisRaw("Mouse Y") * Time.deltaTime * -sensY;
+        HandleInput();
+    }
 
-        rotationY += mouseX;
-        rotationX += mouseY;
+    private void LateUpdate()
+    {
+        if (!IsOwner || MatchManager.Instance == null || !MatchManager.Instance.matchActive.Value)
+            return;
+
+        HandleLook();
+    }
+
+    private void HandleInput()
+    {
+        float mouseX = Input.GetAxisRaw("Mouse X") * sensX * Time.deltaTime;
+        float mouseY = Input.GetAxisRaw("Mouse Y") * sensY * Time.deltaTime;
+
+        currentLookInput = new Vector2(mouseX, mouseY);
+    }
+
+    private void HandleLook()
+    {
+        rotationY += currentLookInput.x;
+        rotationX -= currentLookInput.y; // minus to invert vertical look
 
         rotationX = Mathf.Clamp(rotationX, -90f, 90f);
 
-        // rotate the camera up/down and left/right
         transform.rotation = Quaternion.Euler(rotationX, rotationY, 0);
-
-        // rotate player orientation only left/right
         orientation.rotation = Quaternion.Euler(0, rotationY, 0);
-
-        // no more setting weaponHolder.rotation here!!
-        // Weapon stays child of camera and just tilts locally if you want
     }
-
-
 }
