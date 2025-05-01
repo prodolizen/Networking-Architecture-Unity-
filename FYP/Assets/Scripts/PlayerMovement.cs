@@ -155,8 +155,8 @@ public class PlayerMovement : NetworkBehaviour
         else if (!IsOwner)
         {
             // Remote players interpolate
-            transform.position = Vector3.Lerp(transform.position, serverPosition, Time.fixedDeltaTime * 10f);
-            transform.rotation = Quaternion.Lerp(transform.rotation, serverRotation, Time.fixedDeltaTime * 10f);
+            transform.position = Vector3.Lerp(transform.position, serverPosition, Time.fixedDeltaTime * 100f);
+            transform.rotation = Quaternion.Lerp(transform.rotation, serverRotation, Time.fixedDeltaTime * 100f);
         }
     }
 

@@ -21,8 +21,6 @@ ScriptsOnlyBuild:
     - SceneLoader
     - ServerRoomManager
     - Weapon
-    Unity.Netcode.Components.dll:
-    - Unity.Netcode.Components.NetworkRigidbody
     Unity.Netcode.Editor.dll:
     - Unity.Netcode.Editor.Configuration.NetcodeForGameObjectsProjectSettings
     Unity.Netcode.Runtime.dll:
@@ -333,8 +331,6 @@ ScriptsOnlyBuild:
       Script: {instanceID: 21692}
     - Class: 114
       Script: {instanceID: 21702}
-    - Class: 114
-      Script: {instanceID: 21770}
     - Class: 114
       Script: {instanceID: 21978}
     - Class: 114
