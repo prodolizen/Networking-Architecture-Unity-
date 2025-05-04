@@ -748,7 +748,7 @@ ScriptsOnlyBuild:
     className: UnityOnSelectMessageListener
   - hash:
       serializedVersion: 2
-      Hash: e0cc4f90d53adb5cf5667b9d7ff0db38
+      Hash: 9615dbc0c998d45fdc5b2135fa99ab5d
     assemblyName: Assembly-CSharp
     namespaceName: 
     className: Player

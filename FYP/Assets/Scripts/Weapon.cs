@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using TMPro.Examples;
+using Unity.Burst.CompilerServices;
 using Unity.Netcode;
 using UnityEngine;
 
@@ -62,6 +63,9 @@ public class Weapon : NetworkBehaviour
     private Quaternion initialRotation3;
     private bool firstRun;
 
+    private int _damage = 25;
+    private int _headDamage = 100;
+
     void Start()
     {
         // Default weapons
@@ -73,7 +77,7 @@ public class Weapon : NetworkBehaviour
         slot2 = gameObject.transform.Find("Slot 2");
         slot3 = gameObject.transform.Find("Slot 3");
 
-        playerRef = gameObject.transform.GetComponentInParent<Player>();
+       // playerRef = gameObject.transform.GetComponentInParent<Player>();
         initialRotation3 = slot3.transform.localRotation;
 
        // SpawnSelected();
@@ -84,6 +88,11 @@ public class Weapon : NetworkBehaviour
     {
         if (!IsOwner)
             return;
+        if (playerRef == null)
+        {
+            playerRef = gameObject.transform.GetComponentInParent<Player>();
+            Debug.Log("still not foun dplayer");
+        }
 
         SpawnSelected();
 
@@ -95,15 +104,47 @@ public class Weapon : NetworkBehaviour
         Equip();
         target = crosshairDetection();
         //weaponsTest = target.transform.Find("WeaponHolder").GetComponent<Weapon>();
-        
-        if (Input.GetMouseButtonDown(0)) // Left mouse button
+
+        if (Input.GetMouseButtonDown(0))
         {
-            if (activeWeapon.obj != null && activeWeapon.script != null)
+            //var netObj = target.transform?.root.GetComponent<NetworkObject>();
+            //ulong id = netObj != null ? netObj.NetworkObjectId : 0u;
+            //Debug.Log($"[Client] Raycast hit “{target.collider?.gameObject.name}”, sending RPC with targetId={id}");
+            //playerRef.DealDamageServerRpc(
+            //    // use GetComponentInParent in case the collider is on a child
+            //    target.collider?.GetComponentInParent<NetworkObject>()?.NetworkObjectId ?? 0u,
+            //    _damage
+            //);
+
+            if (target.collider.gameObject.tag == "Head")
             {
-                activeWeapon.script.Shoot(target);
+                Debug.Log("shooting head");
+                playerRef.DealDamageServerRpc(_headDamage);
+            }
+
+            else if (target.collider.gameObject.tag == "Body")
+            {
+                Debug.Log("shooting body");
+                playerRef.DealDamageServerRpc(_damage);
             }
         }
     }
+
+    //[ServerRpc(RequireOwnership = false)]
+    //private void TryDealDamageServerRpc(ulong targetId, int damageAmount)
+    //{
+    //    Debug.Log($"[Server] Hit report: target={targetId}, dmg={damageAmount}");
+
+    //    if (targetId == 0 ||
+    //        !NetworkManager.Singleton.SpawnManager.SpawnedObjects.TryGetValue(targetId, out var obj))
+    //        return;
+
+    //    var player = obj.GetComponent<Player>();
+    //    if (player != null)
+    //    {
+    //        player.ApplyDamage(damageAmount);
+    //    }
+    //}
 
     private void SpawnSelected()
     {
@@ -152,6 +193,7 @@ public class Weapon : NetworkBehaviour
             weapon3.obj.SetActive(false);
             weapon1.obj.SetActive(true);
             activeWeapon = weapon1;
+            _damage = 25;
         }
         if (Input.GetKey(Globals.Secondary))
         {
@@ -159,6 +201,7 @@ public class Weapon : NetworkBehaviour
             weapon3.obj.SetActive(false);
             weapon2.obj.SetActive(true);
             activeWeapon = weapon2;
+            _damage = 10;
         }
         if (Input.GetKey(Globals.Melee))
         {

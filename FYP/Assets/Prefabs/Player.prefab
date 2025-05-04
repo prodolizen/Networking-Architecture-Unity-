@@ -49,7 +49,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   playerPoints: 0
   playerCamera: {fileID: 1695349294378808682}
-  playerRef: {fileID: 0}
+  playerRef: {fileID: 4702084508456893603}
   Weapons:
   - {fileID: 5320552242455257061, guid: 4e481e5dd58b29f44ae52186432dae1c, type: 3}
   - {fileID: 1694449805434718, guid: 6f1a7354265853f44b0ed5e2e43676ad, type: 3}
@@ -183,7 +183,6 @@ GameObject:
   - component: {fileID: 4078110285131549622}
   - component: {fileID: 9039075861145363893}
   - component: {fileID: 172562017112799733}
-  - component: {fileID: 408707100903623}
   - component: {fileID: 4702084508456893603}
   m_Layer: 0
   m_Name: Player
@@ -290,29 +289,6 @@ MonoBehaviour:
   InLocalSpace: 0
   Interpolate: 1
   SlerpPosition: 0
---- !u!136 &408707100903623
-CapsuleCollider:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 2307573744863605078}
-  m_Material: {fileID: 0}
-  m_IncludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_ExcludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_LayerOverridePriority: 0
-  m_IsTrigger: 0
-  m_ProvidesContacts: 0
-  m_Enabled: 1
-  serializedVersion: 2
-  m_Radius: 0.5
-  m_Height: 1
-  m_Direction: 1
-  m_Center: {x: 0, y: 0, z: 0}
 --- !u!114 &4702084508456893603
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -325,8 +301,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e796305f0fc2e3045823f5d07fc32ff8, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  health: 0
-  opponent: {fileID: 0}
+  Health:
+    m_InternalValue: 0
+  maxHealth: 100
 --- !u!1 &3935063492859510117
 GameObject:
   m_ObjectHideFlags: 0

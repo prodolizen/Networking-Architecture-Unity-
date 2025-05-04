@@ -156,7 +156,7 @@ public class PlayerMovement : NetworkBehaviour
         {
             // Remote players interpolate
             transform.position = Vector3.Lerp(transform.position, serverPosition, Time.fixedDeltaTime * 100f);
-            transform.rotation = Quaternion.Lerp(transform.rotation, serverRotation, Time.fixedDeltaTime * 100f);
+            transform.rotation = Quaternion.Lerp(transform.rotation, serverRotation, Time.fixedDeltaTime * 10f);
         }
     }
 
@@ -186,7 +186,7 @@ public class PlayerMovement : NetworkBehaviour
             Invoke(nameof(ResetJump), jumpCooldown);
         }
 
-        Debug.Log($"[PredictMove] Client {OwnerClientId} local position: {transform.position}");
+       // Debug.Log($"[PredictMove] Client {OwnerClientId} local position: {transform.position}");
     }
 
     private void ApplyMovement(Vector2 moveInput, bool jumpInput)
@@ -265,7 +265,7 @@ public class PlayerMovement : NetworkBehaviour
         if (!IsOwner || NetworkManager.Singleton.LocalClientId != clientId)
             return;
 
-        Debug.Log($"[ClientRpc] Local Client {NetworkManager.Singleton.LocalClientId} applying server position {pos}");
+     //   Debug.Log($"[ClientRpc] Local Client {NetworkManager.Singleton.LocalClientId} applying server position {pos}");
 
         serverPosition = pos;
         serverRotation = rot;
@@ -295,7 +295,7 @@ public class PlayerMovement : NetworkBehaviour
             Invoke(nameof(ResetJump), jumpCooldown);
         }
 
-        Debug.Log($"[ServerMove] Moving player {OwnerClientId} to {transform.position}");
+       // Debug.Log($"[ServerMove] Moving player {OwnerClientId} to {transform.position}");
     }
 
 
