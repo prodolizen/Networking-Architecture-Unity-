@@ -60,6 +60,9 @@ public class ServerRoomManager : NetworkBehaviour
 
     private const string baseUrl = "https://zendevfyp.click:3000";
 
+    private bool hadClientConnected = false;
+    private string dedicatedServerName = "unity-server-7777";
+
     private void Awake()
     {
         if (Instance == null)
@@ -112,10 +115,10 @@ public class ServerRoomManager : NetworkBehaviour
         // ❌ No spawning MatchManager in Update anymore — removed
 
 #if UNITY_SERVER
-    if (Application.isBatchMode)
-    {
-        NetworkManager.Singleton.OnClientConnectedCallback += OnClientConnected;
-    }
+        if (Application.isBatchMode)
+        {
+            NetworkManager.Singleton.OnClientConnectedCallback += OnClientConnected;
+        }
 #endif
 
     }
@@ -127,6 +130,7 @@ public class ServerRoomManager : NetworkBehaviour
 
     private void OnClientConnected(ulong clientId)
     {
+        hadClientConnected = true;
         Debug.Log($"[SERVER] Client {clientId} connected, manually spawning player.");
 
         if (playerPrefab == null)
@@ -286,5 +290,31 @@ public class ServerRoomManager : NetworkBehaviour
                 playerObj.Despawn(true);
             }
         }
+
+        if (hadClientConnected && NetworkManager.Singleton.ConnectedClients.Count == 0)
+        {
+            Debug.Log("[SERVER] No remaining clients. Shutting down this dedicated server...");
+            StartCoroutine(ShutdownDedicatedServer());
+        }
     }
+
+    private IEnumerator ShutdownDedicatedServer()
+    {
+        string url = "https://zendevfyp.click:3000/stop-dedicated-server";
+        var body = JsonConvert.SerializeObject(new { name = dedicatedServerName });
+
+        var request = new UnityWebRequest(url, "POST");
+        byte[] bodyRaw = Encoding.UTF8.GetBytes(body);
+        request.uploadHandler = new UploadHandlerRaw(bodyRaw);
+        request.downloadHandler = new DownloadHandlerBuffer();
+        request.SetRequestHeader("Content-Type", "application/json");
+
+        yield return request.SendWebRequest();
+
+        if (request.result != UnityWebRequest.Result.Success)
+            Debug.LogError("[SERVER] Failed to shut down: " + request.error);
+        else
+            Debug.Log("[SERVER] Successfully shut down server: " + request.downloadHandler.text);
+    }
+
 }

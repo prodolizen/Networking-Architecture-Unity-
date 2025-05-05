@@ -14,6 +14,7 @@ public class ServerInfo
 {
     public string ip;
     public int port;
+    public string name;
 }
 
 [Serializable]
@@ -358,10 +359,12 @@ public class NetworkUI : NetworkBehaviour
 
         if (request.result == UnityWebRequest.Result.Success)
         {
+            Debug.Log("Server response: " + request.downloadHandler.text);
             var response = JsonUtility.FromJson<ServerList>(FixJson(request.downloadHandler.text));
             serverInfo = new ServerInfo[response.servers.Length];
             if (response.servers.Length > 0)
             {
+                Debug.Log("hahdahdshksa");
                 for (int i = 0; i < response.servers.Length; i++)
                 {
                     serverList.options[serverList.value].text = "Select Server";
