@@ -4,6 +4,7 @@ ScriptsOnlyBuild:
     - BLASTER
     - Beamer
     - ClientNetworkTransform
+    - DataTool
     - HostManager
     - Knife
     - MAXI
@@ -353,6 +354,8 @@ ScriptsOnlyBuild:
       Script: {instanceID: 24492}
     - Class: 114
       Script: {instanceID: 24494}
+    - Class: 114
+      Script: {instanceID: 26156}
     - Class: 115
       Script: {instanceID: 0}
     - Class: 128
@@ -1598,6 +1601,12 @@ ScriptsOnlyBuild:
     assemblyName: Unity.VisualScripting.Core
     namespaceName: Unity.VisualScripting
     className: UnityOnSliderValueChangedMessageListener
+  - hash:
+      serializedVersion: 2
+      Hash: cc4dd697ca2afbd7b46af026c48a6351
+    assemblyName: Assembly-CSharp
+    namespaceName: 
+    className: DataTool
   platform: 24
   scenePathNames:
   - Assets/Scenes/Main.unity
