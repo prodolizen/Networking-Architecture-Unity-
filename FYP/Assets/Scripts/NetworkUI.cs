@@ -39,6 +39,7 @@ public class NetworkUI : NetworkBehaviour
     private Image crosshairImage;
     public TMP_Text clientCount;
     public TMP_Text matchID;
+    public TMP_Text connecting;
     private bool isReady = false;
     public Button readyButton;
     public Image background;
@@ -115,6 +116,12 @@ public class NetworkUI : NetworkBehaviour
                 }
                 firstRun = false;
             }
+        }
+
+        if (activeLayer == layerThree)
+        {
+            layerThree.SetActive(MatchManager.Instance != null);
+            connecting.gameObject.SetActive(MatchManager.Instance == null);
         }
     }
 
@@ -304,12 +311,17 @@ public class NetworkUI : NetworkBehaviour
     private IEnumerator StartDedicatedServer()
     {
         UnityWebRequest request = new UnityWebRequest("https://zendevfyp.click:3000/start-dedicated-server", "POST");
+        request.downloadHandler = new DownloadHandlerBuffer(); 
+
         yield return request.SendWebRequest();
 
         if (request.result == UnityWebRequest.Result.Success)
         {
             var response = JsonUtility.FromJson<ServerInfo>(request.downloadHandler.text);
+            Debug.Log($"Received server: {response.ip}:{response.port}");
+
             ConnectToServer(response.ip, response.port);
+            SwapLayers(activeLayer, layerThree);
         }
         else
         {

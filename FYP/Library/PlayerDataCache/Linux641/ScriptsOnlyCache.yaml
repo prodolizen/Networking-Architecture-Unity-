@@ -154,6 +154,9 @@ ScriptsOnlyBuild:
     methodName: TakeIP
   - assembly: Assembly-CSharp
     fullTypeName: NetworkUI
+    methodName: CreateDedicatedServer
+  - assembly: Assembly-CSharp
+    fullTypeName: NetworkUI
     methodName: ListServers
   - assembly: Assembly-CSharp
     fullTypeName: NetworkUI
@@ -203,6 +206,9 @@ ScriptsOnlyBuild:
   - assembly: Assembly-CSharp
     fullTypeName: NetworkUI
     methodName: JoinDedicatedServer
+  - assembly: Assembly-CSharp
+    fullTypeName: NetworkUI
+    methodName: CreateDedicatedServer
   sceneClasses:
     Assets/Scenes/Arena.unity:
     - Class: 1
@@ -267,71 +273,71 @@ ScriptsOnlyBuild:
     - Class: 104
       Script: {instanceID: 0}
     - Class: 114
-      Script: {instanceID: 16698}
+      Script: {instanceID: 16746}
     - Class: 114
-      Script: {instanceID: 16748}
+      Script: {instanceID: 16896}
     - Class: 114
-      Script: {instanceID: 16898}
+      Script: {instanceID: 17164}
     - Class: 114
-      Script: {instanceID: 17166}
+      Script: {instanceID: 17472}
     - Class: 114
-      Script: {instanceID: 17474}
+      Script: {instanceID: 17544}
     - Class: 114
-      Script: {instanceID: 17546}
+      Script: {instanceID: 17826}
     - Class: 114
-      Script: {instanceID: 17828}
+      Script: {instanceID: 18008}
     - Class: 114
-      Script: {instanceID: 18010}
+      Script: {instanceID: 18016}
     - Class: 114
-      Script: {instanceID: 18018}
+      Script: {instanceID: 18052}
     - Class: 114
-      Script: {instanceID: 18054}
+      Script: {instanceID: 18064}
     - Class: 114
-      Script: {instanceID: 18066}
+      Script: {instanceID: 18276}
     - Class: 114
-      Script: {instanceID: 18278}
+      Script: {instanceID: 18528}
     - Class: 114
-      Script: {instanceID: 18530}
+      Script: {instanceID: 18656}
     - Class: 114
-      Script: {instanceID: 18658}
+      Script: {instanceID: 18862}
     - Class: 114
-      Script: {instanceID: 18864}
+      Script: {instanceID: 18994}
     - Class: 114
-      Script: {instanceID: 18996}
+      Script: {instanceID: 19082}
     - Class: 114
-      Script: {instanceID: 19084}
+      Script: {instanceID: 19216}
     - Class: 114
-      Script: {instanceID: 19218}
+      Script: {instanceID: 19626}
     - Class: 114
-      Script: {instanceID: 19628}
+      Script: {instanceID: 19784}
     - Class: 114
-      Script: {instanceID: 19786}
+      Script: {instanceID: 19902}
     - Class: 114
-      Script: {instanceID: 19904}
+      Script: {instanceID: 19920}
     - Class: 114
-      Script: {instanceID: 19922}
+      Script: {instanceID: 20186}
     - Class: 114
-      Script: {instanceID: 20188}
+      Script: {instanceID: 20244}
     - Class: 114
-      Script: {instanceID: 20246}
+      Script: {instanceID: 20444}
     - Class: 114
-      Script: {instanceID: 20446}
+      Script: {instanceID: 20604}
     - Class: 114
-      Script: {instanceID: 20606}
+      Script: {instanceID: 20778}
     - Class: 114
-      Script: {instanceID: 20780}
+      Script: {instanceID: 20880}
     - Class: 114
-      Script: {instanceID: 20882}
+      Script: {instanceID: 20934}
     - Class: 114
-      Script: {instanceID: 20936}
+      Script: {instanceID: 20968}
     - Class: 114
-      Script: {instanceID: 20970}
+      Script: {instanceID: 21128}
     - Class: 114
-      Script: {instanceID: 21130}
+      Script: {instanceID: 21690}
     - Class: 114
-      Script: {instanceID: 21692}
+      Script: {instanceID: 21700}
     - Class: 114
-      Script: {instanceID: 21702}
+      Script: {instanceID: 21804}
     - Class: 114
       Script: {instanceID: 21978}
     - Class: 114
@@ -345,17 +351,17 @@ ScriptsOnlyBuild:
     - Class: 114
       Script: {instanceID: 22560}
     - Class: 114
-      Script: {instanceID: 23212}
+      Script: {instanceID: 22724}
     - Class: 114
-      Script: {instanceID: 23434}
+      Script: {instanceID: 23214}
     - Class: 114
-      Script: {instanceID: 23700}
+      Script: {instanceID: 23436}
     - Class: 114
-      Script: {instanceID: 24492}
+      Script: {instanceID: 23702}
     - Class: 114
       Script: {instanceID: 24494}
     - Class: 114
-      Script: {instanceID: 26156}
+      Script: {instanceID: 24496}
     - Class: 115
       Script: {instanceID: 0}
     - Class: 128
@@ -383,12 +389,6 @@ ScriptsOnlyBuild:
     assemblyName: UnityEngine.UI
     namespaceName: UnityEngine.UI
     className: ContentSizeFitter
-  - hash:
-      serializedVersion: 2
-      Hash: 540882762544409cc4530e60db00e951
-    assemblyName: UnityEngine.UI
-    namespaceName: UnityEngine.UI
-    className: CanvasScaler
   - hash:
       serializedVersion: 2
       Hash: 55060a7bf226ac385ce19ebd450f199f
@@ -1213,6 +1213,12 @@ ScriptsOnlyBuild:
     className: NetworkRigidbody
   - hash:
       serializedVersion: 2
+      Hash: 540882762544409cc4530e60db00e951
+    assemblyName: UnityEngine.UI
+    namespaceName: UnityEngine.UI
+    className: CanvasScaler
+  - hash:
+      serializedVersion: 2
       Hash: 4166580c620718548959a77fa7b43fc1
     assemblyName: Assembly-CSharp
     namespaceName: TMPro.Examples
@@ -1313,6 +1319,12 @@ ScriptsOnlyBuild:
     assemblyName: Unity.TextMeshPro
     namespaceName: TMPro
     className: TextContainer
+  - hash:
+      serializedVersion: 2
+      Hash: cc4dd697ca2afbd7b46af026c48a6351
+    assemblyName: Assembly-CSharp
+    namespaceName: 
+    className: DataTool
   - hash:
       serializedVersion: 2
       Hash: 7fdd3ee28e9042c3ec83463d0bb3b230
@@ -1601,12 +1613,6 @@ ScriptsOnlyBuild:
     assemblyName: Unity.VisualScripting.Core
     namespaceName: Unity.VisualScripting
     className: UnityOnSliderValueChangedMessageListener
-  - hash:
-      serializedVersion: 2
-      Hash: cc4dd697ca2afbd7b46af026c48a6351
-    assemblyName: Assembly-CSharp
-    namespaceName: 
-    className: DataTool
   platform: 24
   scenePathNames:
   - Assets/Scenes/Main.unity
