@@ -19,6 +19,7 @@ ScriptsOnlyBuild:
     - PlayerMovement
     - REBEL
     - RIOT
+    - RTTReporter
     - SceneLoader
     - ServerRoomManager
     - Weapon
@@ -362,6 +363,8 @@ ScriptsOnlyBuild:
       Script: {instanceID: 24494}
     - Class: 114
       Script: {instanceID: 24496}
+    - Class: 114
+      Script: {instanceID: 26314}
     - Class: 115
       Script: {instanceID: 0}
     - Class: 128
@@ -1613,6 +1616,12 @@ ScriptsOnlyBuild:
     assemblyName: Unity.VisualScripting.Core
     namespaceName: Unity.VisualScripting
     className: UnityOnSliderValueChangedMessageListener
+  - hash:
+      serializedVersion: 2
+      Hash: 268b1b1a7c80ed30d48d34791603c3e4
+    assemblyName: Assembly-CSharp
+    namespaceName: 
+    className: RTTReporter
   platform: 24
   scenePathNames:
   - Assets/Scenes/Main.unity

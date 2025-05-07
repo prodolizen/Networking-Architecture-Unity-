@@ -384,6 +384,7 @@
 "Assets/Scripts/Player.cs"
 "Assets/Scripts/PlayerCamera.cs"
 "Assets/Scripts/PlayerMovement.cs"
+"Assets/Scripts/RTTReporter.cs"
 "Assets/Scripts/SceneLoader.cs"
 "Assets/Scripts/ServerRoomManager.cs"
 "Assets/Scripts/TestServer.cs"

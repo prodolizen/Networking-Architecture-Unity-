@@ -270,6 +270,11 @@ public class PlayerMovement : NetworkBehaviour
         serverPosition = pos;
         serverRotation = rot;
         serverLastReceivedTick = serverTick;
+
+        float distance = Vector3.Distance(transform.position, pos);
+
+        if (DataTool.Instance != null)
+            DataTool.Instance.ReportReconciliationError(distance);
     }
 
     private void ServerMove(Vector2 moveInput, bool jumpInput)
