@@ -4,6 +4,7 @@ ScriptsOnlyBuild:
     - BLASTER
     - Beamer
     - ClientNetworkTransform
+    - DataTool
     - HostManager
     - Knife
     - MAXI
@@ -18,11 +19,10 @@ ScriptsOnlyBuild:
     - PlayerMovement
     - REBEL
     - RIOT
+    - RTTReporter
     - SceneLoader
     - ServerRoomManager
     - Weapon
-    Unity.Netcode.Components.dll:
-    - Unity.Netcode.Components.NetworkRigidbody
     Unity.Netcode.Editor.dll:
     - Unity.Netcode.Editor.Configuration.NetcodeForGameObjectsProjectSettings
     Unity.Netcode.Runtime.dll:
@@ -122,6 +122,9 @@ ScriptsOnlyBuild:
   methodsToPreserve:
   - assembly: Assembly-CSharp
     fullTypeName: NetworkUI
+    methodName: QuitMatch
+  - assembly: Assembly-CSharp
+    fullTypeName: NetworkUI
     methodName: Return
   - assembly: Assembly-CSharp
     fullTypeName: NetworkUI
@@ -155,6 +158,9 @@ ScriptsOnlyBuild:
     methodName: TakeIP
   - assembly: Assembly-CSharp
     fullTypeName: NetworkUI
+    methodName: CreateDedicatedServer
+  - assembly: Assembly-CSharp
+    fullTypeName: NetworkUI
     methodName: ListServers
   - assembly: Assembly-CSharp
     fullTypeName: NetworkUI
@@ -168,6 +174,9 @@ ScriptsOnlyBuild:
   - assembly: Assembly-CSharp
     fullTypeName: NetworkUI
     methodName: AccountButton
+  - assembly: Assembly-CSharp
+    fullTypeName: NetworkUI
+    methodName: Return
   - assembly: Assembly-CSharp
     fullTypeName: NetworkUI
     methodName: ListServers
@@ -188,6 +197,9 @@ ScriptsOnlyBuild:
     methodName: Register
   - assembly: Assembly-CSharp
     fullTypeName: NetworkUI
+    methodName: QuitMatch
+  - assembly: Assembly-CSharp
+    fullTypeName: NetworkUI
     methodName: Login
   - assembly: Assembly-CSharp
     fullTypeName: NetworkUI
@@ -197,13 +209,13 @@ ScriptsOnlyBuild:
     methodName: TakeIP
   - assembly: Assembly-CSharp
     fullTypeName: NetworkUI
+    methodName: CreateDedicatedServer
+  - assembly: Assembly-CSharp
+    fullTypeName: NetworkUI
     methodName: EnterIP
   - assembly: Assembly-CSharp
     fullTypeName: NetworkUI
     methodName: JoinDedicatedServer
-  - assembly: Assembly-CSharp
-    fullTypeName: NetworkUI
-    methodName: Return
   sceneClasses:
     Assets/Scenes/Arena.unity:
     - Class: 1
@@ -328,35 +340,37 @@ ScriptsOnlyBuild:
     - Class: 114
       Script: {instanceID: 20970}
     - Class: 114
-      Script: {instanceID: 21130}
+      Script: {instanceID: 21050}
     - Class: 114
-      Script: {instanceID: 21692}
+      Script: {instanceID: 21132}
     - Class: 114
-      Script: {instanceID: 21702}
+      Script: {instanceID: 21694}
     - Class: 114
-      Script: {instanceID: 21770}
+      Script: {instanceID: 21704}
     - Class: 114
-      Script: {instanceID: 21978}
+      Script: {instanceID: 21980}
     - Class: 114
-      Script: {instanceID: 21994}
+      Script: {instanceID: 21996}
     - Class: 114
-      Script: {instanceID: 22288}
+      Script: {instanceID: 22290}
     - Class: 114
-      Script: {instanceID: 22396}
+      Script: {instanceID: 22398}
     - Class: 114
-      Script: {instanceID: 22406}
+      Script: {instanceID: 22408}
     - Class: 114
-      Script: {instanceID: 22560}
+      Script: {instanceID: 22562}
     - Class: 114
-      Script: {instanceID: 23212}
+      Script: {instanceID: 22726}
     - Class: 114
-      Script: {instanceID: 23434}
+      Script: {instanceID: 23216}
     - Class: 114
-      Script: {instanceID: 23700}
+      Script: {instanceID: 23438}
     - Class: 114
-      Script: {instanceID: 24492}
+      Script: {instanceID: 23704}
     - Class: 114
-      Script: {instanceID: 24494}
+      Script: {instanceID: 24496}
+    - Class: 114
+      Script: {instanceID: 24498}
     - Class: 115
       Script: {instanceID: 0}
     - Class: 128
@@ -752,7 +766,7 @@ ScriptsOnlyBuild:
     className: UnityOnSelectMessageListener
   - hash:
       serializedVersion: 2
-      Hash: e0cc4f90d53adb5cf5667b9d7ff0db38
+      Hash: 8d4d67ae99f766463cfcc77fe6ab5ecd
     assemblyName: Assembly-CSharp
     namespaceName: 
     className: Player
@@ -776,7 +790,7 @@ ScriptsOnlyBuild:
     className: BaseInput
   - hash:
       serializedVersion: 2
-      Hash: 90a63718c2a7543383e17c166a14c9c8
+      Hash: fd36a3a1afe70122eb7456df0f003fb1
     assemblyName: Assembly-CSharp
     namespaceName: 
     className: NetworkUI
@@ -1118,6 +1132,12 @@ ScriptsOnlyBuild:
     className: Slider
   - hash:
       serializedVersion: 2
+      Hash: 268b1b1a7c80ed30d48d34791603c3e4
+    assemblyName: Assembly-CSharp
+    namespaceName: 
+    className: RTTReporter
+  - hash:
+      serializedVersion: 2
       Hash: 0c0b64d103fe555d830e8ca206abd12a
     assemblyName: Unity.VisualScripting.Core
     namespaceName: Unity.VisualScripting
@@ -1304,7 +1324,7 @@ ScriptsOnlyBuild:
     className: BeforeAfterTestCommandState
   - hash:
       serializedVersion: 2
-      Hash: d617234bbaa33a55e24cef83f7081eaf
+      Hash: d57ffff4dea6a5303acf41bfa7f94906
     assemblyName: Assembly-CSharp
     namespaceName: 
     className: MatchManager
@@ -1314,6 +1334,12 @@ ScriptsOnlyBuild:
     assemblyName: Unity.TextMeshPro
     namespaceName: TMPro
     className: TextContainer
+  - hash:
+      serializedVersion: 2
+      Hash: cc4dd697ca2afbd7b46af026c48a6351
+    assemblyName: Assembly-CSharp
+    namespaceName: 
+    className: DataTool
   - hash:
       serializedVersion: 2
       Hash: 7fdd3ee28e9042c3ec83463d0bb3b230

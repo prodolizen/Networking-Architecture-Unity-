@@ -36,6 +36,7 @@ public class NetworkUI : NetworkBehaviour
     private GameObject activeLayer;
     private GameObject prevLayer;
     public GameObject score;
+    public GameObject settings;
 
     private string gameIP;
     public GameObject crosshair;
@@ -61,6 +62,7 @@ public class NetworkUI : NetworkBehaviour
 
     private Player self;
     private Player other;
+    private bool settingsMenuUp;
 
     private void Awake()
     {
@@ -102,7 +104,11 @@ public class NetworkUI : NetworkBehaviour
         if (MatchManager.Instance != null && matchManagerReady)
         {
             clientCount.text = "Connected Clients: " + MatchManager.Instance.connectedClients.Value;
-            background.gameObject.SetActive(!MatchManager.Instance.matchActive.Value);
+            
+            if (!settingsMenuUp)
+            {
+                background.gameObject.SetActive(!MatchManager.Instance.matchActive.Value);
+            }
 
             if (MatchManager.Instance.matchActive.Value)
             {
@@ -178,6 +184,30 @@ public class NetworkUI : NetworkBehaviour
                 Cursor.lockState = CursorLockMode.None;
                 Cursor.visible = true;
             }
+
+            if (MatchManager.Instance.matchActive.Value)
+            {
+                if (Input.GetKeyDown(KeyCode.P))
+                {
+                    settingsMenuUp = !settingsMenuUp;
+                    settings.SetActive(settingsMenuUp);
+                    background.gameObject.SetActive(settingsMenuUp);
+                }
+
+                if (settingsMenuUp)
+                {
+                    Cursor.lockState = CursorLockMode.None;
+                    Cursor.visible = true;
+                }
+                else
+                {
+                    Cursor.lockState = CursorLockMode.Locked;
+                    Cursor.visible = false;
+                }
+            }
+            else
+                settings.SetActive(false);
+
         }
     }
 
@@ -486,5 +516,12 @@ public class NetworkUI : NetworkBehaviour
 #if UNITY_EDITOR
         UnityEditor.EditorApplication.isPlaying = false;
 #endif
+    }
+
+    public void ChangeSensitivity(float f)
+    {
+        Debug.Log(f);
+        Globals.PlayerCamSensX = f;
+        Globals.PlayerCamSensY = f;
     }
 }

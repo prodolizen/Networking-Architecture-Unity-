@@ -43,11 +43,14 @@ public class PlayerCamera : NetworkBehaviour
         if (!IsOwner || MatchManager.Instance == null || !MatchManager.Instance.matchActive.Value)
             return;
 
-        if (Cursor.lockState != CursorLockMode.Locked)
-            Cursor.lockState = CursorLockMode.Locked;
+        //if (Cursor.lockState != CursorLockMode.Locked)
+        //    Cursor.lockState = CursorLockMode.Locked;
 
-        if (Cursor.visible == true)
-            Cursor.visible = false;
+        //if (Cursor.visible == true)
+        //    Cursor.visible = false;
+
+        sensX = Globals.PlayerCamSensX;
+        sensY = Globals.PlayerCamSensY;
 
         HandleInput();
     }
