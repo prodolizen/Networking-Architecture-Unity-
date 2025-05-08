@@ -19,6 +19,7 @@ public class MatchManager : NetworkBehaviour
     public NetworkVariable<FixedString64Bytes> serverAdress = new NetworkVariable<FixedString64Bytes>();
     public NetworkVariable<bool> begunMatch = new NetworkVariable<bool>(false);
     public NetworkVariable<int> connectedClients = new NetworkVariable<int>(0);
+    public NetworkVariable<bool> matchEnd = new NetworkVariable<bool>(false);
 
     public bool devOverride = false;
 
@@ -82,6 +83,15 @@ public class MatchManager : NetworkBehaviour
         }
     }
 
+    public void EndMatch()
+    {
+        if (IsServer && begunMatch.Value && matchActive.Value)
+        {
+            matchEnd.Value = true;  
+            matchActive.Value = false;
+        }
+    }
+
     public override void OnNetworkSpawn()
     {
         base.OnNetworkSpawn();
@@ -99,10 +109,14 @@ public class MatchManager : NetworkBehaviour
         OnMatchManagerReady?.Invoke(); // <-- Notify listeners
     }
 
-    public void testing()
-    {
-        Debug.Log("[Testing] MatchManager method called");
-    }
+    //public void ResetValues()
+    //{
+    //    matchActive.Value = false;
+    //    matchEnd.Value = false;
+    //    clientReadyStates.Clear();
+    //    clientReady.Value = false;
+    //    hostReady.Value = false;
+    //}
 
     private void OnClientDisconnectCallback(ulong clientId)
     {

@@ -112,7 +112,6 @@ public class ServerRoomManager : NetworkBehaviour
 
     private void Update()
     {
-        // ❌ No spawning MatchManager in Update anymore — removed
 
 #if UNITY_SERVER
         if (Application.isBatchMode)
@@ -316,5 +315,4 @@ public class ServerRoomManager : NetworkBehaviour
         else
             Debug.Log("[SERVER] Successfully shut down server: " + request.downloadHandler.text);
     }
-
 }

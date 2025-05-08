@@ -8,6 +8,8 @@ public class Player : NetworkBehaviour
     [SerializeField] private int maxHealth = 100;
     public event Action<int, int> OnHealthChanged;
     private Player otherPlayer;
+    public NetworkVariable<bool> IsWinner = new NetworkVariable<bool>(false);
+    public NetworkVariable<int> Score = new NetworkVariable<int>(0);
 
     public override void OnNetworkSpawn()
     {
@@ -35,7 +37,19 @@ public class Player : NetworkBehaviour
     private void HandleDeath()
     {
         Debug.Log($"Player {OwnerClientId} died!");
-        // Despawn, respawn logic, etc.
+
+        otherPlayer.Score.Value++;
+
+        gameObject.GetComponent<PlayerMovement>().ResetSpawnPos();
+        otherPlayer.GetComponent<PlayerMovement>().ResetSpawnPos();
+
+        StartCoroutine(DelayedHealthReset());
+
+        if (MatchManager.Instance != null && otherPlayer.Score.Value >= 5)
+        {
+            otherPlayer.IsWinner.Value = true;
+            MatchManager.Instance.EndMatch();
+        }
     }
 
     //public void DealDamage(int damage)
@@ -46,7 +60,7 @@ public class Player : NetworkBehaviour
 
     [ServerRpc(RequireOwnership = false)]
     public void DealDamageServerRpc(int damageAmount)
-    {     
+    {
         if (otherPlayer != null)
         {
             otherPlayer.ApplyDamage(damageAmount);
@@ -59,16 +73,27 @@ public class Player : NetworkBehaviour
 
     private void Update()
     {
-       if (otherPlayer == null)
+        if (otherPlayer == null)
         {
             Player[] players = GameObject.FindObjectsOfType<Player>();
 
             foreach (Player p in players)
             {
-                if(p != this)
+                if (p != this)
                     otherPlayer = p;
             }
         }
 
     }
+
+    private System.Collections.IEnumerator DelayedHealthReset()
+    {
+        yield return new WaitForSeconds(0.1f); // short delay to ensure state sync
+
+        Health.Value = maxHealth;
+        otherPlayer.Health.Value = maxHealth;
+
+        Debug.Log($"Health reset: P{OwnerClientId}={Health.Value}, P{otherPlayer.OwnerClientId}={otherPlayer.Health.Value}");
+    }
+
 }

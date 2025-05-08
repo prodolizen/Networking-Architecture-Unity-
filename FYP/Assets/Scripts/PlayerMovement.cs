@@ -64,6 +64,18 @@ public class PlayerMovement : NetworkBehaviour
         }
     }
 
+    public void ResetSpawnPos()
+    {
+        if (IsServer)
+        {
+            Vector3 spawnPosition = GetSpawnPosition(OwnerClientId);
+            transform.position = spawnPosition;
+            serverPosition = spawnPosition;
+            serverRotation = transform.rotation;  
+            SetSpawnClientRpc(spawnPosition);
+        }
+    }
+
 
     [ClientRpc]
     private void SetSpawnClientRpc(Vector3 spawnPos)

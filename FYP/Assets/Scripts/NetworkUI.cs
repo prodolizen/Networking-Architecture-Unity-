@@ -32,8 +32,10 @@ public class NetworkUI : NetworkBehaviour
     public GameObject layerFour;
     public GameObject layerFive;
     public GameObject layerSix;
+    public GameObject layerSeven;
     private GameObject activeLayer;
     private GameObject prevLayer;
+    public GameObject score;
 
     private string gameIP;
     public GameObject crosshair;
@@ -48,12 +50,17 @@ public class NetworkUI : NetworkBehaviour
     private string password;
     public TMP_Text loggedName;
     private bool loggedIn = false;
-    public HostManager hostManager;
     public TMP_Dropdown serverList;
     private ServerInfo[] serverInfo;
     private bool firstRun;
     public GameObject matchManagerPrefab;
-    private bool matchManagerReady = false; // <-- Added
+    private bool matchManagerReady = false;
+    public TMP_Text result;
+    public TMP_Text selfScore;
+    public TMP_Text otherScore;
+
+    private Player self;
+    private Player other;
 
     private void Awake()
     {
@@ -80,10 +87,10 @@ public class NetworkUI : NetworkBehaviour
         crosshairImage = crosshair.GetComponent<Image>();
         activeLayer = layerOne;
 
-        if (hostManager == null)
-        {
-            hostManager = FindObjectOfType<HostManager>();
-        }
+        //if (hostManager == null)
+        //{
+        //    hostManager = FindObjectOfType<HostManager>();
+        //}
         firstRun = true;
         NetworkManager.Singleton.OnServerStarted += TrySpawnMatchManager;
     }
@@ -100,8 +107,16 @@ public class NetworkUI : NetworkBehaviour
             if (MatchManager.Instance.matchActive.Value)
             {
                 uiComps.SetActive(false);
+                score.SetActive(true); 
             }
             crosshair.SetActive(MatchManager.Instance.matchActive.Value);
+
+            if (self != null && other != null)
+            {
+                selfScore.text = self.Score.Value.ToString();
+                otherScore.text = other.Score.Value.ToString(); 
+            }
+            
         }
         else
         {
@@ -123,6 +138,46 @@ public class NetworkUI : NetworkBehaviour
         {
             layerThree.SetActive(MatchManager.Instance != null);
             connecting.gameObject.SetActive(MatchManager.Instance == null);
+        }
+
+        if (MatchManager.Instance != null)
+        {
+            if (self == null || other == null)
+            {
+                var players = GameObject.FindObjectsOfType<Player>();
+                foreach (var player in players)
+                {
+                    if (player.IsOwner)
+                        self = player;
+                    else
+                        other = player;
+                }
+            }
+
+            if (MatchManager.Instance.matchEnd.Value)
+            {
+                //var players = GameObject.FindObjectsOfType<Player>();
+                //foreach (var player in players)
+                //{
+                //    if (player.IsOwner)
+                //    {
+                //        if (player.IsWinner.Value)
+                //            result.text = "You Win!";
+                //        else
+                //            result.text = "You Lose!";
+                //    }
+                //}
+
+                if (self.IsWinner.Value)
+                    result.text = "You Win!";
+                else
+                    result.text = "You Lose!";
+
+                SwapLayers(activeLayer, layerSeven);
+                uiComps.SetActive(true);
+                Cursor.lockState = CursorLockMode.None;
+                Cursor.visible = true;
+            }
         }
     }
 
@@ -268,7 +323,6 @@ public class NetworkUI : NetworkBehaviour
         if (MatchManager.Instance != null && matchManagerReady && MatchManager.Instance.IsSpawned) // <-- check MatchManager spawned
         {
             Debug.Log("[Ready] Sending ready state to server.");
-            MatchManager.Instance.testing();
             MatchManager.Instance.SetReadyStateServerRpc(isReady, NetworkManager.Singleton.LocalClientId);
         }
         else
@@ -423,5 +477,14 @@ public class NetworkUI : NetworkBehaviour
         }
 
         SwapLayers(activeLayer, prevLayer);
+    }
+
+    public void QuitMatch()
+    {
+        Application.Quit();
+
+#if UNITY_EDITOR
+        UnityEditor.EditorApplication.isPlaying = false;
+#endif
     }
 }
