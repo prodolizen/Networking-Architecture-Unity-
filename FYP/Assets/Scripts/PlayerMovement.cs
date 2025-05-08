@@ -54,17 +54,17 @@ public class PlayerMovement : NetworkBehaviour
     {
         base.OnNetworkSpawn();
 
-        if (IsServer)
+        if (IsServer) //have the server set the client to the spawn position on initial connect
         {
             Vector3 spawnPosition = GetSpawnPosition(OwnerClientId);
             transform.position = spawnPosition;
-            serverPosition = spawnPosition;   // <- ADD THIS LINE
-            serverRotation = transform.rotation;  // <- And this
+            serverPosition = spawnPosition;   
+            serverRotation = transform.rotation;  
             SetSpawnClientRpc(spawnPosition);
         }
     }
 
-    public void ResetSpawnPos()
+    public void ResetSpawnPos() //used to reset the players back to spawn position after the round is over
     {
         if (IsServer)
         {
@@ -78,13 +78,13 @@ public class PlayerMovement : NetworkBehaviour
 
 
     [ClientRpc]
-    private void SetSpawnClientRpc(Vector3 spawnPos)
+    private void SetSpawnClientRpc(Vector3 spawnPos) //remote procedure call to maintain server authoritative state
     {
         if (!IsServer)
             transform.position = spawnPos;
     }
 
-    private Vector3 GetSpawnPosition(ulong clientId)
+    private Vector3 GetSpawnPosition(ulong clientId) //find spawnn position depending on client id
     {
         GameObject spawnPoint = GameObject.Find($"spawnPoint_{clientId + 1}");
         if (spawnPoint != null)
@@ -94,13 +94,13 @@ public class PlayerMovement : NetworkBehaviour
     }
 
     private void Start()
-    {
+    { 
         moveSpeed = Globals.PlayerMoveSpeed;
         rb = GetComponent<Rigidbody>();
         rb.freezeRotation = true;
         jumpKey = Globals.JumpKey;
 
-        if (IsOwner)
+        if (IsOwner) //set the player self to be invisible to the camera and keep the enemy visible
         {
             SetLayerRecursively(playerCharacter, 7);
             rb.isKinematic = false;
@@ -123,12 +123,21 @@ public class PlayerMovement : NetworkBehaviour
 
     private void Update()
     {
+        if (IsHost && MatchManager.Instance != null && !MatchManager.Instance.matchActive.Value && !Application.isBatchMode)
+        {
+            ResetSpawnPos();
+        }
+
         if (!IsOwner || MatchManager.Instance == null || !MatchManager.Instance.matchActive.Value)
             return;
 
         localTick++;
 
-        moveSpeed = Input.GetKey(KeyCode.LeftShift) ? Globals.PlayerSprintSpeed : Globals.PlayerMoveSpeed;
+        moveSpeed = Input.GetKey(KeyCode.LeftShift) ? Globals.PlayerSprintSpeed : Globals.PlayerMoveSpeed; //change speed depending on sprint key 
+
+//#if !UNITY_EDITOR
+//        moveSpeed = Input.GetKey(KeyCode.LeftShift) ? 7f : 4f; //change speed depending on sprint key
+//#endif
 
         Vector2 moveInput = new Vector2(Input.GetAxisRaw("Horizontal"), Input.GetAxisRaw("Vertical"));
         bool jumpInput = Input.GetKey(jumpKey);
@@ -139,7 +148,7 @@ public class PlayerMovement : NetworkBehaviour
         PlayerInputState inputState = new PlayerInputState(moveInput, jumpInput, localTick);
         inputBuffer.Add(inputState);
 
-        SendInputServerRpc(moveInput, jumpInput, localTick, orientation.rotation);
+        SendInputServerRpc(moveInput, jumpInput, localTick, orientation.rotation); //remote procedure call to send local input states to the server to allow it to handle movement
     }
 
     private void FixedUpdate()
@@ -149,8 +158,8 @@ public class PlayerMovement : NetworkBehaviour
 
         if (IsOwner)
         {
-            UpdateGrounded();
-            PredictMove(new PlayerInputState(currentInput, currentJumpInput, localTick));
+            UpdateGrounded(); //check if we are on the  floor
+            PredictMove(new PlayerInputState(currentInput, currentJumpInput, localTick)); //local move prediction
         }
 
         if (IsServer)
@@ -166,7 +175,7 @@ public class PlayerMovement : NetworkBehaviour
         }
         else if (!IsOwner)
         {
-            // Remote players interpolate
+            // reconcile are local position with the server position smoothly 
             transform.position = Vector3.Lerp(transform.position, serverPosition, Time.fixedDeltaTime * 100f);
             transform.rotation = Quaternion.Lerp(transform.rotation, serverRotation, Time.fixedDeltaTime * 10f);
         }
@@ -180,7 +189,7 @@ public class PlayerMovement : NetworkBehaviour
         rb.drag = grounded ? groundDrag : 0f;
     }
 
-    private void PredictMove(PlayerInputState inputState)
+    private void PredictMove(PlayerInputState inputState) //local movement prediction, add rb force locally only
     {
         Vector3 moveDirection = orientation.forward * inputState.moveInput.y + orientation.right * inputState.moveInput.x;
 
@@ -201,26 +210,26 @@ public class PlayerMovement : NetworkBehaviour
        // Debug.Log($"[PredictMove] Client {OwnerClientId} local position: {transform.position}");
     }
 
-    private void ApplyMovement(Vector2 moveInput, bool jumpInput)
-    {
-        Vector3 moveDirection = orientation.forward * moveInput.y + orientation.right * moveInput.x;
+    //private void ApplyMovement(Vector2 moveInput, bool jumpInput) //no longer used
+    //{
+    //    Vector3 moveDirection = orientation.forward * moveInput.y + orientation.right * moveInput.x;
 
-        if (grounded)
-            rb.AddForce(moveDirection.normalized * moveSpeed * 10f, ForceMode.Force);
-        else
-            rb.AddForce(moveDirection.normalized * moveSpeed * 10f * airMultiplier, ForceMode.Force);
+    //    if (grounded)
+    //        rb.AddForce(moveDirection.normalized * moveSpeed * 10f, ForceMode.Force);
+    //    else
+    //        rb.AddForce(moveDirection.normalized * moveSpeed * 10f * airMultiplier, ForceMode.Force);
 
-        ClampVelocity();
+    //    ClampVelocity();
 
-        if (jumpInput && canJump && grounded)
-        {
-            canJump = false;
-            Jump();
-            Invoke(nameof(ResetJump), jumpCooldown);
-        }
-    }
+    //    if (jumpInput && canJump && grounded)
+    //    {
+    //        canJump = false;
+    //        Jump();
+    //        Invoke(nameof(ResetJump), jumpCooldown);
+    //    }
+    //}
 
-    private void ClampVelocity()
+    private void ClampVelocity() //ensure we are not moving too fast 
     {
         Vector3 flatVelocity = new Vector3(rb.velocity.x, 0f, rb.velocity.z);
 
@@ -242,7 +251,7 @@ public class PlayerMovement : NetworkBehaviour
         canJump = true;
     }
 
-    private void SetLayerRecursively(GameObject obj, int layer)
+    private void SetLayerRecursively(GameObject obj, int layer) //helper function for setting player layermasks
     {
         obj.layer = layer;
         foreach (Transform child in obj.transform)
@@ -254,7 +263,7 @@ public class PlayerMovement : NetworkBehaviour
     [ServerRpc(RequireOwnership = false)]
     private void SendInputServerRpc(Vector2 moveInput, bool jumpInput, int tick, Quaternion rotation, ServerRpcParams rpcParams = default)
     {
-        if (rpcParams.Receive.SenderClientId != OwnerClientId)
+        if (rpcParams.Receive.SenderClientId != OwnerClientId) //ensure we are matching the correct local input states to the correct player 
         {
             Debug.LogWarning($"[ServerRpc] Wrong client tried to move object! Sender={rpcParams.Receive.SenderClientId} Owner={OwnerClientId}");
             return;
@@ -285,15 +294,15 @@ public class PlayerMovement : NetworkBehaviour
 
         float distance = Vector3.Distance(transform.position, pos);
 
-        if (DataTool.Instance != null)
+        if (DataTool.Instance != null) //used for data logging
             DataTool.Instance.ReportReconciliationError(distance);
     }
 
-    private void ServerMove(Vector2 moveInput, bool jumpInput)
+    private void ServerMove(Vector2 moveInput, bool jumpInput) //move client on the server
     {
         UpdateGrounded();
 
-        if (moveInput.magnitude > 0.1f)
+        if (moveInput.magnitude > 0.1f) //only move if there is movement to be done
         {
             Vector3 moveDirection = orientation.forward * moveInput.y + orientation.right * moveInput.x;
 

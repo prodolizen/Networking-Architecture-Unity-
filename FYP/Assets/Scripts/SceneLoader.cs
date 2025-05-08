@@ -21,12 +21,12 @@ public class SceneLoader : NetworkBehaviour
         }
     }
 
-    public void LoadScene(string sceneName, LoadSceneMode sceneMode)
+    public void LoadScene(string sceneName, LoadSceneMode sceneMode) //use networkmanagers correct sceneloading process
     {
         NetworkManager.SceneManager.LoadScene(sceneName, sceneMode);
     }
 
-    public bool SceneLoaded(string sceneName)
+    public bool SceneLoaded(string sceneName) //check if scene has finished loading
     {
         for (int i = 0; i < SceneManager.sceneCount; i++)
         {

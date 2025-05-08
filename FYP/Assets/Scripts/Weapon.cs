@@ -219,12 +219,12 @@ public class Weapon : NetworkBehaviour
 
     private RaycastHit crosshairDetection()
     {
-        Vector3 screenCenter = new Vector3(Screen.width / 2, Screen.height / 2, 0);
+        Vector3 screenCenter = new Vector3(Screen.width / 2, Screen.height / 2, 0); //calculate screen center
 
-        Ray ray = playerCamera.ScreenPointToRay(screenCenter);
+        Ray ray = playerCamera.ScreenPointToRay(screenCenter); //create ray 
         RaycastHit hit;
 
-        if (Physics.Raycast(ray, out hit))
+        if (Physics.Raycast(ray, out hit)) //if a hit has occured
         {
             Debug.Log(hit.collider.gameObject.tag);
 

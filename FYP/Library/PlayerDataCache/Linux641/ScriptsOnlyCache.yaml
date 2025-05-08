@@ -62,6 +62,7 @@ ScriptsOnlyBuild:
     - UnityEngine.UI.RectMask2D
     - UnityEngine.UI.ScrollRect
     - UnityEngine.UI.Scrollbar
+    - UnityEngine.UI.Slider
     - UnityEngine.UI.Toggle
   serializedClasses:
     Unity.Collections:
@@ -117,9 +118,16 @@ ScriptsOnlyBuild:
     - UnityEngine.UI.Navigation
     - UnityEngine.UI.ScrollRect/ScrollRectEvent
     - UnityEngine.UI.Scrollbar/ScrollEvent
+    - UnityEngine.UI.Slider/SliderEvent
     - UnityEngine.UI.SpriteState
     - UnityEngine.UI.Toggle/ToggleEvent
   methodsToPreserve:
+  - assembly: Assembly-CSharp
+    fullTypeName: NetworkUI
+    methodName: QuitMatch
+  - assembly: Assembly-CSharp
+    fullTypeName: NetworkUI
+    methodName: ChangeSensitivity
   - assembly: Assembly-CSharp
     fullTypeName: NetworkUI
     methodName: QuitMatch
@@ -176,7 +184,13 @@ ScriptsOnlyBuild:
     methodName: AccountButton
   - assembly: Assembly-CSharp
     fullTypeName: NetworkUI
+    methodName: QuitMatch
+  - assembly: Assembly-CSharp
+    fullTypeName: NetworkUI
     methodName: Return
+  - assembly: Assembly-CSharp
+    fullTypeName: NetworkUI
+    methodName: ChangeSensitivity
   - assembly: Assembly-CSharp
     fullTypeName: NetworkUI
     methodName: ListServers
@@ -280,37 +294,37 @@ ScriptsOnlyBuild:
     - Class: 104
       Script: {instanceID: 0}
     - Class: 114
-      Script: {instanceID: 16650}
+      Script: {instanceID: 16698}
     - Class: 114
-      Script: {instanceID: 16700}
+      Script: {instanceID: 16748}
     - Class: 114
-      Script: {instanceID: 16750}
+      Script: {instanceID: 16898}
     - Class: 114
-      Script: {instanceID: 16900}
+      Script: {instanceID: 17166}
     - Class: 114
-      Script: {instanceID: 17168}
+      Script: {instanceID: 17474}
     - Class: 114
-      Script: {instanceID: 17476}
+      Script: {instanceID: 17546}
     - Class: 114
-      Script: {instanceID: 17548}
+      Script: {instanceID: 17828}
     - Class: 114
-      Script: {instanceID: 17830}
+      Script: {instanceID: 18010}
     - Class: 114
-      Script: {instanceID: 18012}
+      Script: {instanceID: 18018}
     - Class: 114
-      Script: {instanceID: 18020}
+      Script: {instanceID: 18054}
     - Class: 114
-      Script: {instanceID: 18056}
+      Script: {instanceID: 18066}
     - Class: 114
-      Script: {instanceID: 18068}
+      Script: {instanceID: 18278}
     - Class: 114
-      Script: {instanceID: 18280}
+      Script: {instanceID: 18530}
     - Class: 114
-      Script: {instanceID: 18532}
+      Script: {instanceID: 18658}
     - Class: 114
-      Script: {instanceID: 18660}
+      Script: {instanceID: 18864}
     - Class: 114
-      Script: {instanceID: 18866}
+      Script: {instanceID: 18996}
     - Class: 114
       Script: {instanceID: 19084}
     - Class: 114
@@ -339,6 +353,8 @@ ScriptsOnlyBuild:
       Script: {instanceID: 20936}
     - Class: 114
       Script: {instanceID: 20970}
+    - Class: 114
+      Script: {instanceID: 21046}
     - Class: 114
       Script: {instanceID: 21050}
     - Class: 114
@@ -392,12 +408,6 @@ ScriptsOnlyBuild:
     - Class: 224
       Script: {instanceID: 0}
   scriptHashData:
-  - hash:
-      serializedVersion: 2
-      Hash: 8d4d67ae99f766463cfcc77fe6ab5ecd
-    assemblyName: Assembly-CSharp
-    namespaceName: 
-    className: Player
   - hash:
       serializedVersion: 2
       Hash: d41ab9b5ea92474f9c0a6937a0607ce1
@@ -772,6 +782,12 @@ ScriptsOnlyBuild:
     className: UnityOnSelectMessageListener
   - hash:
       serializedVersion: 2
+      Hash: 8d4d67ae99f766463cfcc77fe6ab5ecd
+    assemblyName: Assembly-CSharp
+    namespaceName: 
+    className: Player
+  - hash:
+      serializedVersion: 2
       Hash: 5b8b7230ad968399f6726aa1269dcdcb
     assemblyName: UnityEngine.TestRunner
     namespaceName: UnityEngine.TestTools.TestRunner.Callbacks
@@ -790,7 +806,7 @@ ScriptsOnlyBuild:
     className: BaseInput
   - hash:
       serializedVersion: 2
-      Hash: fd36a3a1afe70122eb7456df0f003fb1
+      Hash: 25d530c449cb8be245cf614226b95772
     assemblyName: Assembly-CSharp
     namespaceName: 
     className: NetworkUI

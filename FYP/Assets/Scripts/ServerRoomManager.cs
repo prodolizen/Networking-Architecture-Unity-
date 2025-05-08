@@ -65,7 +65,7 @@ public class ServerRoomManager : NetworkBehaviour
 
     private void Awake()
     {
-        if (Instance == null)
+        if (Instance == null) //ensure theres only one and that the instance is set correctly 
         {
             Instance = this;
             DontDestroyOnLoad(gameObject);
@@ -95,7 +95,7 @@ public class ServerRoomManager : NetworkBehaviour
         NetworkManager.Singleton.OnClientDisconnectCallback += OnClientDisconnected;
     }
 
-    private void OnServerStarted()
+    private void OnServerStarted() //when server is booted ensure we have a matchmanager
     {
         Debug.Log("[SERVER] Server started.");
 
@@ -127,7 +127,7 @@ public class ServerRoomManager : NetworkBehaviour
         NetworkManager.Singleton.Shutdown();
     }
 
-    private void OnClientConnected(ulong clientId)
+    private void OnClientConnected(ulong clientId) //give each client a player 
     {
         hadClientConnected = true;
         Debug.Log($"[SERVER] Client {clientId} connected, manually spawning player.");
@@ -155,7 +155,7 @@ public class ServerRoomManager : NetworkBehaviour
         netObj.SpawnAsPlayerObject(clientId);
     }
 
-    public void CreateRoomOnServer(int roomCode, string serverIp)
+    public void CreateRoomOnServer(int roomCode, string serverIp) //used to store the roomcode and ip for local games on the SQL db 
     {
         Debug.Log($"Creating room with Room Code: {roomCode} and Server IP: {serverIp}");
         RoomData data = new RoomData { roomCode = roomCode, serverIp = serverIp };
@@ -163,7 +163,7 @@ public class ServerRoomManager : NetworkBehaviour
         StartCoroutine(PostRequest($"{baseUrl}/create-room", json));
     }
 
-    private IEnumerator PostRequest(string url, string json)
+    private IEnumerator PostRequest(string url, string json) //function for sending requests to the server
     {
         var request = new UnityWebRequest(url, "POST");
         byte[] bodyRaw = Encoding.UTF8.GetBytes(json);
@@ -183,13 +183,13 @@ public class ServerRoomManager : NetworkBehaviour
         }
     }
 
-    public void GetServerIpFromRoomCode(int roomCode, Action<string> callback)
+    public void GetServerIpFromRoomCode(int roomCode, Action<string> callback) //look for roomcode in database and return its linked ip 
     {
         Debug.Log($"{baseUrl}/get-ip/{roomCode}");
         StartCoroutine(GetRequest($"{baseUrl}/get-ip/{roomCode}", callback));
     }
 
-    private IEnumerator GetRequest(string url, Action<string> callback)
+    private IEnumerator GetRequest(string url, Action<string> callback) //recieve data from server
     {
         UnityWebRequest request = UnityWebRequest.Get(url);
         yield return request.SendWebRequest();
@@ -227,7 +227,7 @@ public class ServerRoomManager : NetworkBehaviour
         }
     }
 
-    public void LoginAccount(string username, string password, Action onSuccess = null)
+    public void LoginAccount(string username, string password, Action onSuccess = null) //login to existing account
     {
         AccountData data = new AccountData(username, password);
         string json = JsonUtility.ToJson(data);
@@ -241,7 +241,7 @@ public class ServerRoomManager : NetworkBehaviour
         StartCoroutine(PostAuthRequest($"{baseUrl}/register", json, "Registered", onSuccess));
     }
 
-    private IEnumerator PostAuthRequest(string url, string json, string successMsg, Action onSuccess = null)
+    private IEnumerator PostAuthRequest(string url, string json, string successMsg, Action onSuccess = null) //same as post request but with auth
     {
         UnityWebRequest request = new UnityWebRequest(url, "POST");
         byte[] bodyRaw = Encoding.UTF8.GetBytes(json);
@@ -262,7 +262,7 @@ public class ServerRoomManager : NetworkBehaviour
         }
     }
 
-    public override void OnNetworkSpawn()
+    public override void OnNetworkSpawn() //ensure we have the correct instance assigned on spawn 
     {
         base.OnNetworkSpawn();
 
@@ -286,18 +286,18 @@ public class ServerRoomManager : NetworkBehaviour
             var playerObj = networkClient.PlayerObject;
             if (playerObj != null)
             {
-                playerObj.Despawn(true);
+                playerObj.Despawn(true); //despawn player
             }
         }
 
-        if (hadClientConnected && NetworkManager.Singleton.ConnectedClients.Count == 0)
+        if (hadClientConnected && NetworkManager.Singleton.ConnectedClients.Count == 0) //if all clients disconnected delete server
         {
             Debug.Log("[SERVER] No remaining clients. Shutting down this dedicated server...");
             StartCoroutine(ShutdownDedicatedServer());
         }
     }
 
-    private IEnumerator ShutdownDedicatedServer()
+    private IEnumerator ShutdownDedicatedServer() //call server function to delete the dedicated server
     {
         string url = "https://zendevfyp.click:3000/stop-dedicated-server";
         var body = JsonConvert.SerializeObject(new { name = dedicatedServerName });

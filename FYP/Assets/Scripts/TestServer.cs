@@ -3,6 +3,7 @@ using UnityEngine.Networking;
 using System.Collections;
 using TMPro.Examples;
 
+//for testing, no longer used
 public class TestServer : MonoBehaviour
 {
     void Start()

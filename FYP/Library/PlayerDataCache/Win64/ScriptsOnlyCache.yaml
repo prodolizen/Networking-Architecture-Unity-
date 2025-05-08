@@ -62,6 +62,7 @@ ScriptsOnlyBuild:
     - UnityEngine.UI.RectMask2D
     - UnityEngine.UI.ScrollRect
     - UnityEngine.UI.Scrollbar
+    - UnityEngine.UI.Slider
     - UnityEngine.UI.Toggle
   serializedClasses:
     Unity.Collections:
@@ -117,9 +118,16 @@ ScriptsOnlyBuild:
     - UnityEngine.UI.Navigation
     - UnityEngine.UI.ScrollRect/ScrollRectEvent
     - UnityEngine.UI.Scrollbar/ScrollEvent
+    - UnityEngine.UI.Slider/SliderEvent
     - UnityEngine.UI.SpriteState
     - UnityEngine.UI.Toggle/ToggleEvent
   methodsToPreserve:
+  - assembly: Assembly-CSharp
+    fullTypeName: NetworkUI
+    methodName: QuitMatch
+  - assembly: Assembly-CSharp
+    fullTypeName: NetworkUI
+    methodName: ChangeSensitivity
   - assembly: Assembly-CSharp
     fullTypeName: NetworkUI
     methodName: QuitMatch
@@ -176,7 +184,13 @@ ScriptsOnlyBuild:
     methodName: AccountButton
   - assembly: Assembly-CSharp
     fullTypeName: NetworkUI
+    methodName: QuitMatch
+  - assembly: Assembly-CSharp
+    fullTypeName: NetworkUI
     methodName: Return
+  - assembly: Assembly-CSharp
+    fullTypeName: NetworkUI
+    methodName: ChangeSensitivity
   - assembly: Assembly-CSharp
     fullTypeName: NetworkUI
     methodName: ListServers
@@ -339,6 +353,8 @@ ScriptsOnlyBuild:
       Script: {instanceID: 20936}
     - Class: 114
       Script: {instanceID: 20970}
+    - Class: 114
+      Script: {instanceID: 21046}
     - Class: 114
       Script: {instanceID: 21050}
     - Class: 114
@@ -790,7 +806,7 @@ ScriptsOnlyBuild:
     className: BaseInput
   - hash:
       serializedVersion: 2
-      Hash: fd36a3a1afe70122eb7456df0f003fb1
+      Hash: 25d530c449cb8be245cf614226b95772
     assemblyName: Assembly-CSharp
     namespaceName: 
     className: NetworkUI

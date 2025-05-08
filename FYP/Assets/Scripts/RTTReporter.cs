@@ -2,6 +2,7 @@ using Unity.Netcode;
 using Unity.Netcode.Transports.UTP;
 using UnityEngine;
 
+//script to grab rtt using unitys methods
 public class RTTReporter : NetworkBehaviour
 {
     private UnityTransport _transport;

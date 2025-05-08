@@ -7,7 +7,6 @@ public class HostManager : MonoBehaviour
     // Start hosting on EC2
     public void StartHostingGame(int roomCode)
     {
-        // Path to the bash script on your EC2 server
         string scriptPath = "/home/ubuntu/host_game/start_game.sh";
         string arguments = $"{roomCode}";  // Pass roomCode as argument
 
@@ -15,13 +14,13 @@ public class HostManager : MonoBehaviour
         ProcessStartInfo processInfo = new ProcessStartInfo
         {
             FileName = "ssh",  // Use SSH to access the EC2 instance
-            Arguments = $"ubuntu@13.51.167.138 'bash {scriptPath} {arguments}'",  // Replace with your EC2 public IP
-            RedirectStandardOutput = true,  // Optionally capture output (like the IP)
+            Arguments = $"ubuntu@13.51.167.138 'bash {scriptPath} {arguments}'",  
+            RedirectStandardOutput = true, 
             UseShellExecute = false,
             CreateNoWindow = true
         };
 
-        // Start the process and capture the output (EC2's public IP)
+        // Start the process and capture the output 
         Process process = new Process { StartInfo = processInfo };
         process.Start();
 
@@ -37,7 +36,7 @@ public class HostManager : MonoBehaviour
         else
         {
             // Log the server IP
-            string serverIp = output.Trim();  // Assuming output is just the IP
+            string serverIp = output.Trim();  //
             UnityEngine.Debug.Log($"Server started on EC2 with IP: {serverIp}");
 
             // Save the server IP and room code to the database
@@ -49,7 +48,6 @@ public class HostManager : MonoBehaviour
     // Function to save the room code and EC2 server IP to the database
     private void CreateRoomOnServer(int roomCode, string serverIp)
     {
-        // Implement the call to your server to save the room code and server IP to the database
-        ServerRoomManager.Instance.CreateRoomOnServer(roomCode, serverIp);  // Call the CreateRoomOnServer function in MatchManager
+        ServerRoomManager.Instance.CreateRoomOnServer(roomCode, serverIp); 
     }
 }

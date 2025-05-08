@@ -10,7 +10,7 @@ public class MatchManager : NetworkBehaviour
 {
     public static MatchManager Instance;
 
-    public static event Action OnMatchManagerReady; // <-- new event
+    public static event Action OnMatchManagerReady;
 
     public NetworkVariable<int> score = new NetworkVariable<int>(0);
     public NetworkVariable<bool> matchActive = new NetworkVariable<bool>(false);
@@ -21,7 +21,7 @@ public class MatchManager : NetworkBehaviour
     public NetworkVariable<int> connectedClients = new NetworkVariable<int>(0);
     public NetworkVariable<bool> matchEnd = new NetworkVariable<bool>(false);
 
-    public bool devOverride = false;
+    public bool devOverride = false; //depreciated
 
     private Dictionary<ulong, bool> clientReadyStates = new Dictionary<ulong, bool>();
 
@@ -34,7 +34,7 @@ public class MatchManager : NetworkBehaviour
             var transport = NetworkManager.Singleton.GetComponent<UnityTransport>();
             if (transport != null)
             {
-                serverAdress.Value = transport.ConnectionData.Address;
+                serverAdress.Value = transport.ConnectionData.Address; //store server adress as network variable so clients can access it aswell
             }
         }
     }
@@ -49,15 +49,15 @@ public class MatchManager : NetworkBehaviour
 
 
     [ServerRpc(RequireOwnership = false)]
-    public void SetReadyStateServerRpc(bool isReady, ulong clientId)
+    public void SetReadyStateServerRpc(bool isReady, ulong clientId) //control ready states through the server, maintains server authoritive architecture
     {
         Debug.Log($"[ServerRpc] Client {clientId} set ready to {isReady}");
 
-        if (clientReadyStates.ContainsKey(clientId))
+        if (clientReadyStates.ContainsKey(clientId)) //check for ours
         {
             clientReadyStates[clientId] = isReady;
         }
-        else
+        else //if we dont exist add it
         {
             clientReadyStates.Add(clientId, isReady);
         }
@@ -96,7 +96,7 @@ public class MatchManager : NetworkBehaviour
     {
         base.OnNetworkSpawn();
 
-        if (Instance != null && Instance != this)
+        if (Instance != null && Instance != this) //ensure there is no instance mismatch
         {
             Destroy(gameObject);
             return;
@@ -120,7 +120,7 @@ public class MatchManager : NetworkBehaviour
 
     private void OnClientDisconnectCallback(ulong clientId)
     {
-        if (clientReadyStates.ContainsKey(clientId))
+        if (clientReadyStates.ContainsKey(clientId)) //remove ourself from dictionary 
         {
             clientReadyStates.Remove(clientId);
         }

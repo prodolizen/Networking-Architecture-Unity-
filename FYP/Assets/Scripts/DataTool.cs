@@ -51,7 +51,7 @@ public class DataTool : MonoBehaviour
             NetworkManager.Singleton.OnClientConnectedCallback -= OnClientConnected;
     }
 
-    private void OnClientConnected(ulong clientId)
+    private void OnClientConnected(ulong clientId) //when client connects we record time and create .csv file, then fill .csv
     {
         if (clientId != NetworkManager.Singleton.LocalClientId) return;
 
